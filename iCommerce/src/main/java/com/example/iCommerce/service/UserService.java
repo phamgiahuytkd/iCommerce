@@ -5,6 +5,7 @@ import com.example.iCommerce.dto.request.UserCreationRequest;
 import com.example.iCommerce.dto.request.UserUpdateRequest;
 import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.enums.Role;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.mapper.UserMapper;
@@ -37,6 +38,7 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
+        user.setUser_type(Role.USER.name());
 
         return userMapper.toUserResponse(userRepository.save(user));
 

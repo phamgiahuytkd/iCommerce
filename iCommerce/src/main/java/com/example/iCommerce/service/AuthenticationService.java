@@ -4,6 +4,7 @@ import com.example.iCommerce.dto.request.AuthenticationRequest;
 import com.example.iCommerce.dto.request.IntrospectRequest;
 import com.example.iCommerce.dto.response.AuthenticationResponse;
 import com.example.iCommerce.dto.response.IntrospectResponse;
+import com.example.iCommerce.entity.User;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.repository.UserRepository;
@@ -20,11 +21,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Date;
+import java.util.StringJoiner;
 
 
 @Service
@@ -71,7 +75,7 @@ public class AuthenticationService {
         if(!authenticated)
             throw new AppException(ErrorCode.PASSWORD_INCORRECT);
 
-        var token = generateToken(user.getId());
+        var token = generateToken(user);
 
 
         return AuthenticationResponse.builder()
@@ -82,16 +86,16 @@ public class AuthenticationService {
 
 
 
-    private String generateToken(String id){
+    private String generateToken(User user){
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .subject(id)
+                .subject(user.getId())
                 .issuer("iCommerce.com")
                 .issueTime(new Date())
                 .expirationTime( new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
-                .claim("custom", "CUSTOM")
+                .claim("scope", user.getUser_type())
                 .build();
 
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -106,6 +110,8 @@ public class AuthenticationService {
         }
 
     }
+
+
 
 
 
