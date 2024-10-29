@@ -2,6 +2,8 @@ package com.example.iCommerce.controller;
 
 import com.example.iCommerce.dto.request.AuthenticationRequest;
 import com.example.iCommerce.dto.request.IntrospectRequest;
+import com.example.iCommerce.dto.request.LogoutRequest;
+import com.example.iCommerce.dto.request.RefreshRequest;
 import com.example.iCommerce.dto.response.ApiResponse;
 import com.example.iCommerce.dto.response.AuthenticationResponse;
 import com.example.iCommerce.dto.response.IntrospectResponse;
@@ -28,6 +30,23 @@ public class AuthenticationController {
     @PostMapping("/login")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request){
         var result = authenticationService.authenticate(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
+    }
+
+
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
+                .build();
+    }
+
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+        var result = authenticationService.refreshToken(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(result)
                 .build();
