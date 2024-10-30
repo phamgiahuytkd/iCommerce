@@ -26,8 +26,12 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/login", "/auth/introspect", "/auth/logout",
+    private final String[] POST_PUBLIC = {"/users", "/auth/login", "/auth/introspect", "/auth/logout",
             "/auth/refresh"
+
+    };
+
+    private final String[] GET_PUBLIC = {"/products", "/products/{id}"
 
     };
 
@@ -50,7 +54,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
         httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                request.requestMatchers(HttpMethod.POST, POST_PUBLIC).permitAll()
+                        .requestMatchers(HttpMethod.GET, GET_PUBLIC).permitAll()
                         .anyRequest().authenticated()
         );
 

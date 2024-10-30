@@ -12,6 +12,8 @@ public enum ErrorCode {
     USER_NOT_EXISTED(1001, "Tài khoản không tồn tại", HttpStatus.NOT_FOUND),
     EMAIL_EXISTED(1002, "Email đã tồn tại", HttpStatus.BAD_REQUEST),
     PASSWORD_INCORRECT(1003, "Mật khẩu không đúng", HttpStatus.BAD_REQUEST),
+    PRODUCT_EXISTED(1004, "Sản phẩm đã tồn ", HttpStatus.BAD_REQUEST),
+    PRODUCT_NOT_EXISTED(1005, "Sản phẩm không đã tồn ", HttpStatus.BAD_REQUEST),
 
 
 
@@ -28,8 +30,8 @@ public enum ErrorCode {
     USERNAME_INVALID(1003, "User name must be at least {min} character", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1004, "Password must be at least {min} character", HttpStatus.BAD_REQUEST),
 
-    UNAUTHENTICATED(1006, "UNAUTHENTICATED", HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1007, "You don't have permission", HttpStatus.FORBIDDEN),
+    UNAUTHENTICATED(2001, "UNAUTHENTICATED", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(2002, "You don't have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age have to be at least {min}", HttpStatus.BAD_REQUEST),
     ;
 
