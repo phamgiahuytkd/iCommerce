@@ -6,7 +6,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -15,22 +14,18 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Products {
+@Table(name = "product_history")
+public class ProductHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    String name;
+
     Long price;
-    String brand;
-    String colour;
-    String image;
     String created_by;
     LocalDateTime created_date;
-    int stock;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ProductHistory> histories;
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false) // Khai báo khóa ngoại product_id liên kết với bảng Products
+    Products product;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Cart> carts;
 }

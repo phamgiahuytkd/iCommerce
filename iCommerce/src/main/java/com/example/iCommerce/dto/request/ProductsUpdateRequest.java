@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductsUpdateRequest {
     String name;
-    long price;
+    Long price;
     String brand;
     String colour;
     String image;

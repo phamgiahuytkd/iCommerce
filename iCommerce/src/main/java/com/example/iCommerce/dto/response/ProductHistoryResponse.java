@@ -1,4 +1,4 @@
-package com.example.iCommerce.dto.request;
+package com.example.iCommerce.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,13 +10,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductsCreationRequest {
-    String name;
+public class ProductHistoryResponse {
+    String product_id;
     Long price;
-    String brand;
-    String colour;
-    String image;
     String created_by;
     LocalDateTime created_date;
-    int stock;
 }

@@ -1,12 +1,11 @@
 package com.example.iCommerce.mapper;
 
 
+import com.example.iCommerce.dto.request.CartCreationRequest;
 import com.example.iCommerce.dto.request.ProductsCreationRequest;
 import com.example.iCommerce.dto.request.ProductsUpdateRequest;
-import com.example.iCommerce.dto.request.UserUpdateRequest;
 import com.example.iCommerce.dto.response.ProductsResponse;
 import com.example.iCommerce.entity.Products;
-import com.example.iCommerce.entity.User;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;

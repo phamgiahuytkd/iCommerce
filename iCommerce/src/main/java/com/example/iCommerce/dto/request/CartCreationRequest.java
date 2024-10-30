@@ -10,13 +10,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductsCreationRequest {
-    String name;
-    Long price;
-    String brand;
-    String colour;
-    String image;
-    String created_by;
-    LocalDateTime created_date;
-    int stock;
+public class CartCreationRequest {
+    String product_id;
+    String status;
 }

@@ -12,8 +12,8 @@ public enum ErrorCode {
     USER_NOT_EXISTED(1001, "Tài khoản không tồn tại", HttpStatus.NOT_FOUND),
     EMAIL_EXISTED(1002, "Email đã tồn tại", HttpStatus.BAD_REQUEST),
     PASSWORD_INCORRECT(1003, "Mật khẩu không đúng", HttpStatus.BAD_REQUEST),
-    PRODUCT_EXISTED(1004, "Sản phẩm đã tồn ", HttpStatus.BAD_REQUEST),
-    PRODUCT_NOT_EXISTED(1005, "Sản phẩm không đã tồn ", HttpStatus.BAD_REQUEST),
+    PRODUCT_EXISTED(1004, "Sản phẩm đã tồn tại", HttpStatus.BAD_REQUEST),
+    PRODUCT_NOT_EXISTED(1005, "Sản phẩm không tồn tại", HttpStatus.BAD_REQUEST),
 
 
 

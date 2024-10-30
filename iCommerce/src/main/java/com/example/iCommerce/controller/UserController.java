@@ -28,10 +28,10 @@ public class UserController {
                 .build();
     }
 
-    @PutMapping("/{userID}")
-    ApiResponse<UserResponse> updateUser(@PathVariable("userID") String userID, @RequestBody UserUpdateRequest request){
+    @PutMapping
+    ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest request){
         return ApiResponse.<UserResponse>builder()
-                .result( userService.updateUser(userID, request))
+                .result( userService.updateUser(request))
                 .build();
 
     }

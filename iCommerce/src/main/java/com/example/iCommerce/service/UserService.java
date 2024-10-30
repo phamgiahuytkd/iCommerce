@@ -48,7 +48,10 @@ public class UserService {
     }
 
 
-    public UserResponse updateUser(String id, UserUpdateRequest request){
+    @PostAuthorize("returnObject.id == authentication.name")
+    public UserResponse updateUser(UserUpdateRequest request){
+        var context = SecurityContextHolder.getContext();
+        String id = context.getAuthentication().getName();
         User user = userRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED)
         );

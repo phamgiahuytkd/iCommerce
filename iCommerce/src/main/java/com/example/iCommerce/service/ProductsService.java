@@ -1,14 +1,23 @@
 package com.example.iCommerce.service;
 
 
+import com.example.iCommerce.dto.request.CartCreationRequest;
 import com.example.iCommerce.dto.request.ProductsCreationRequest;
 import com.example.iCommerce.dto.request.ProductsUpdateRequest;
+import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.ProductsResponse;
+import com.example.iCommerce.entity.Cart;
+import com.example.iCommerce.entity.ProductHistory;
 import com.example.iCommerce.entity.Products;
+import com.example.iCommerce.entity.User;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
+import com.example.iCommerce.mapper.CartMapper;
 import com.example.iCommerce.mapper.ProductsMapper;
+import com.example.iCommerce.repository.CartRepository;
+import com.example.iCommerce.repository.ProductHistoryRepository;
 import com.example.iCommerce.repository.ProductsRepository;
+import com.example.iCommerce.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,6 +34,10 @@ import java.util.List;
 public class ProductsService {
     ProductsRepository productsRepository;
     ProductsMapper productsMapper;
+    ProductHistoryRepository productHistoryRepository;
+    CartMapper cartMapper;
+    CartRepository cartRepository;
+    UserRepository userRepository;
 
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -49,12 +62,26 @@ public class ProductsService {
     @PreAuthorize("hasRole('ADMIN')")
     public ProductsResponse updateProducts(String id, ProductsUpdateRequest request){
         Products products = productsRepository.findById(id).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
         );
 
         if (!request.getName().equals(products.getName()) || !request.getBrand().equals(products.getBrand()))
             if(productsRepository.existsByNameAndBrand(request.getName(), request.getBrand()))
                 throw new AppException(ErrorCode.PRODUCT_EXISTED);
+
+        var context = SecurityContextHolder.getContext();
+        String created_by = context.getAuthentication().getName();
+
+        if(!products.getPrice().equals(request.getPrice())  && request.getPrice() != null) {
+            ProductHistory productHistory = ProductHistory.builder()
+                    .product(products)
+                    .price(products.getPrice())
+                    .created_by(created_by)
+                    .created_date(LocalDateTime.now())
+                    .build();
+
+            productHistoryRepository.save(productHistory);
+        }
 
         productsMapper.updateProducts(products, request);
 
@@ -81,6 +108,41 @@ public class ProductsService {
 
     public List<ProductsResponse> getProducts(){
         return productsRepository.findAll().stream().map(productsMapper::toProductsResponse).toList();
+    }
+
+
+
+    //CART
+
+    @PreAuthorize("hasRole('USER')")
+    public CartResponse createCart(CartCreationRequest request) {
+
+        var context = SecurityContextHolder.getContext();
+        String id = context.getAuthentication().getName();
+
+        Products products = productsRepository.findById(request.getProduct_id()).orElseThrow(
+                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
+        );
+
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+        );
+
+
+        Cart cart = cartMapper.toCart(request);
+        cart.setProduct(products);
+        cart.setUser(user);
+        cart.setPrice(products.getPrice());
+
+        cartRepository.save(cart);
+
+        return CartResponse.builder()
+                .product_id(cart.getProduct().getId())
+                .name(cart.getProduct().getName())
+                .price(cart.getPrice())
+                .image(cart.getProduct().getImage())
+                .build();
+
     }
 
 

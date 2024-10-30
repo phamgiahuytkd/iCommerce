@@ -1,14 +1,12 @@
 package com.example.iCommerce.controller;
 
+import com.example.iCommerce.dto.request.CartCreationRequest;
 import com.example.iCommerce.dto.request.ProductsCreationRequest;
 import com.example.iCommerce.dto.request.ProductsUpdateRequest;
-import com.example.iCommerce.dto.request.UserCreationRequest;
-import com.example.iCommerce.dto.request.UserUpdateRequest;
 import com.example.iCommerce.dto.response.ApiResponse;
+import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.ProductsResponse;
-import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.service.ProductsService;
-import com.example.iCommerce.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -66,6 +64,15 @@ public class ProductController {
 
         return ApiResponse.<List<ProductsResponse>>builder()
                 .result(productsService.getProducts())
+                .build();
+    }
+
+
+
+    @PostMapping("/cart")
+    ApiResponse<CartResponse> createCart(@RequestBody CartCreationRequest request){
+        return ApiResponse.<CartResponse>builder()
+                .result(productsService.createCart(request))
                 .build();
     }
 
