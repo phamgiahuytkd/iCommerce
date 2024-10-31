@@ -1,20 +1,13 @@
 package com.example.iCommerce.service;
 
 
-import com.example.iCommerce.dto.request.CartCreationRequest;
 import com.example.iCommerce.dto.request.OrdersCreationRequest;
-import com.example.iCommerce.dto.request.ProductsCreationRequest;
-import com.example.iCommerce.dto.request.ProductsUpdateRequest;
-import com.example.iCommerce.dto.response.CartResponse;
+import com.example.iCommerce.dto.response.OrderDetailResponse;
 import com.example.iCommerce.dto.response.OrdersResponse;
-import com.example.iCommerce.dto.response.ProductsResponse;
 import com.example.iCommerce.entity.*;
-import com.example.iCommerce.enums.OrderStatus;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
-import com.example.iCommerce.mapper.CartMapper;
 import com.example.iCommerce.mapper.OrdersMapper;
-import com.example.iCommerce.mapper.ProductsMapper;
 import com.example.iCommerce.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @RequiredArgsConstructor
@@ -32,23 +25,53 @@ import java.util.List;
 public class OrderService {
     OrdersRepository ordersRepository;
     OrdersMapper ordersMapper;
+    CartRepository cartRepository;
 
 
     @PreAuthorize("hasRole('USER')")
     public OrdersResponse createOrders(OrdersCreationRequest request) {
-
-
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
+        List<OrderDetailResponse> products = new ArrayList<>();
 
+        HashMap<String, Integer> checkUniqueProduct = new HashMap<>();
+
+        request.getProducts().forEach(cart_id ->{
+            checkUniqueProduct.put(cart_id, checkUniqueProduct.getOrDefault(cart_id, 0) + 1);
+
+        });
+
+
+        AtomicReference<Long> totalAmount = new AtomicReference<>(0L);
+        checkUniqueProduct.forEach((cart_id, count)->{
+                Cart cart = cartRepository.findById(cart_id).orElseThrow(
+                        ()-> new AppException(ErrorCode.UNAUTHENTICATED)
+                );
+
+                products.add(OrderDetailResponse.builder()
+                                .product_id(cart.getProduct().getId())
+                                .name(cart.getProduct().getName())
+                                .price(cart.getPrice())
+                                .quantity(count)
+                                .amount(count*cart.getPrice())
+                        .build());
+                totalAmount.updateAndGet(v -> v + (count * cart.getPrice()));
+
+            }
+
+
+        );
 
         Orders orders = ordersMapper.toOrders(request);
-        orders.setOrder_status(OrderStatus.PROCESSING.name());
-        orders.setOrder_date(LocalDateTime.now());
+
+        ordersRepository.save(orders);
+        return OrdersResponse.builder()
+                .id(orders.getId())
+                .build();
 
 
 
-        return ordersMapper.toOrdersResponse(ordersRepository.save(orders));
+
 
     }
 

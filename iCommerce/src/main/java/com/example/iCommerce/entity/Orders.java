@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 @Getter
@@ -19,8 +20,7 @@ public class Orders {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    @ElementCollection
-    List<Products> products;
+    String products;
     Long amount;
     String shipping_address;
     String order_phone;

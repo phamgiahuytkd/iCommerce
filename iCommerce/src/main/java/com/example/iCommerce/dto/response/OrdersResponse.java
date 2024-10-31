@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 @Data
@@ -14,7 +15,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrdersResponse {
     String id;
-    List<Products> products;
+    List<OrderDetailResponse> productsList;
     Long amount;
     String shipping_address;
     String order_phone;
