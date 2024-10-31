@@ -21,7 +21,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductsService productsService;
-    private final CartRepository cartRepository;
 
 
     @PostMapping
