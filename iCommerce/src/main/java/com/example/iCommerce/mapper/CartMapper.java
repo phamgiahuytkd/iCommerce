@@ -8,16 +8,18 @@ import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.entity.Cart;
 import com.example.iCommerce.entity.User;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface CartMapper {
     Cart toCart(CartCreationRequest request);
+
+    @Mapping(target = "product_id", source = "product.id")
+    @Mapping(target = "name", source = "product.name")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "image", source = "product.image")
     CartResponse toCartResponse(Cart cart);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateCart(@MappingTarget Cart cart, UserUpdateRequest request);
+
+
 }

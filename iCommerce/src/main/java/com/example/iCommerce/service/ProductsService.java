@@ -134,15 +134,28 @@ public class ProductsService {
         cart.setUser(user);
         cart.setPrice(products.getPrice());
 
-        cartRepository.save(cart);
 
-        return CartResponse.builder()
-                .product_id(cart.getProduct().getId())
-                .name(cart.getProduct().getName())
-                .price(cart.getPrice())
-                .image(cart.getProduct().getImage())
-                .build();
+        return cartMapper.toCartResponse(cartRepository.save(cart));
 
+    }
+
+
+    @PreAuthorize("hasRole('USER')")
+    public void deleteCart(String id){
+        cartRepository.deleteById(id);
+    }
+
+
+    @PreAuthorize("hasRole('USER')")
+    public List<CartResponse> getCarts(){
+        var context = SecurityContextHolder.getContext();
+        String id = context.getAuthentication().getName();
+
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+        );
+
+        return cartRepository.findAllByUserId(id).stream().map(cartMapper::toCartResponse).toList();
     }
 
 

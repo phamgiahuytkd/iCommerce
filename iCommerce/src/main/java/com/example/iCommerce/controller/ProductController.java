@@ -6,6 +6,7 @@ import com.example.iCommerce.dto.request.ProductsUpdateRequest;
 import com.example.iCommerce.dto.response.ApiResponse;
 import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.ProductsResponse;
+import com.example.iCommerce.repository.CartRepository;
 import com.example.iCommerce.service.ProductsService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductsService productsService;
+    private final CartRepository cartRepository;
 
 
     @PostMapping
@@ -73,6 +75,23 @@ public class ProductController {
     ApiResponse<CartResponse> createCart(@RequestBody CartCreationRequest request){
         return ApiResponse.<CartResponse>builder()
                 .result(productsService.createCart(request))
+                .build();
+    }
+
+
+    @DeleteMapping("/cart/{id}")
+    ApiResponse<String> deleteCart(@PathVariable String id){
+        productsService.deleteCart(id);
+        return ApiResponse.<String>builder()
+                .result("Succeed")
+                .build();
+    }
+
+    @GetMapping("/cart")
+    ApiResponse<List<CartResponse>> getCarts(){
+
+        return ApiResponse.<List<CartResponse>>builder()
+                .result(productsService.getCarts())
                 .build();
     }
 
