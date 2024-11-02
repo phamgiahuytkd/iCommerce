@@ -109,11 +109,11 @@ public class OrderService {
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
         if (role.equals("ROLE_USER")) {
-            if (!request.getStatus().equals(OrderStatus.CANCELED.name())) {
+            if (!request.getOrder_status().equals(OrderStatus.CANCELED.name())) {
                 throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
             }
         } else if (role.equals("ROLE_ADMIN")) {
-            if (!request.getStatus().equals(OrderStatus.APPROVED.name()) && !request.getStatus().equals(OrderStatus.REFUSED.name())) {
+            if (!request.getOrder_status().equals(OrderStatus.APPROVED.name()) && !request.getOrder_status().equals(OrderStatus.REFUSED.name())) {
                 throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
             }
         } else {
@@ -123,7 +123,7 @@ public class OrderService {
         Orders orders = ordersRepository.findById(id).orElseThrow(
                 ()-> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION)
         );
-        orders.setOrder_status(request.getStatus());
+        orders.setOrder_status(request.getOrder_status());
         ordersRepository.save(orders);
 
 
