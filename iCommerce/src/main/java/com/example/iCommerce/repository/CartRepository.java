@@ -12,4 +12,5 @@ import java.util.Optional;
 @Repository
 public interface CartRepository extends JpaRepository<Cart, String> {
     List<Cart> findAllByUserId(String customer_id);
+
 }

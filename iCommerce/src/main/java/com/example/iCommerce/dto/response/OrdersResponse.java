@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -15,10 +16,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrdersResponse {
     String id;
-    List<OrderDetailResponse> productsList;
+    Map<String, OrderDetailResponse> productsList;
     Long amount;
     String shipping_address;
     String order_phone;
-    LocalDateTime order_date;
+    String order_date;
     String order_status;
 }

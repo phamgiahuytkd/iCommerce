@@ -10,6 +10,7 @@ import com.example.iCommerce.entity.Cart;
 import com.example.iCommerce.entity.ProductHistory;
 import com.example.iCommerce.entity.Products;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.enums.CartStatus;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.mapper.CartMapper;
@@ -133,6 +134,7 @@ public class ProductsService {
         cart.setProduct(products);
         cart.setUser(user);
         cart.setPrice(products.getPrice());
+        cart.setStatus(CartStatus.WAIT.name());
 
 
         return cartMapper.toCartResponse(cartRepository.save(cart));

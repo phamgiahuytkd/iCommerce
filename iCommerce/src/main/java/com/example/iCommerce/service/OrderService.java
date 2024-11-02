@@ -2,9 +2,14 @@ package com.example.iCommerce.service;
 
 
 import com.example.iCommerce.dto.request.OrdersCreationRequest;
+import com.example.iCommerce.dto.request.OrdersUpdateRequest;
+import com.example.iCommerce.dto.request.UserUpdateRequest;
 import com.example.iCommerce.dto.response.OrderDetailResponse;
 import com.example.iCommerce.dto.response.OrdersResponse;
+import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.entity.*;
+import com.example.iCommerce.enums.CartStatus;
+import com.example.iCommerce.enums.OrderStatus;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.mapper.OrdersMapper;
@@ -12,13 +17,17 @@ import com.example.iCommerce.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicLong;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -26,153 +35,78 @@ public class OrderService {
     OrdersRepository ordersRepository;
     OrdersMapper ordersMapper;
     CartRepository cartRepository;
+    UserRepository userRepository;
+    ProductsRepository productsRepository;
 
 
     @PreAuthorize("hasRole('USER')")
     public OrdersResponse createOrders(OrdersCreationRequest request) {
         var context = SecurityContextHolder.getContext();
-        String id = context.getAuthentication().getName();
-        List<OrderDetailResponse> products = new ArrayList<>();
+        var id = context.getAuthentication().getName();
 
-        HashMap<String, Integer> checkUniqueProduct = new HashMap<>();
+        AtomicLong totalAmount = new AtomicLong(0L);
+
+        Map<String, OrderDetailResponse> checkUniqueProduct = new HashMap<>();
 
         request.getProducts().forEach(cart_id ->{
-            checkUniqueProduct.put(cart_id, checkUniqueProduct.getOrDefault(cart_id, 0) + 1);
+            Cart cart = cartRepository.findById(cart_id).orElseThrow(
+                    ()-> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
+            );
+
+            if(!cart.getStatus().equals(CartStatus.WAIT.name()))
+                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            if(checkUniqueProduct.containsKey(cart.getProduct().getId())){
+                OrderDetailResponse detail = checkUniqueProduct.get(cart.getProduct().getId());
+                int quantity = detail.getQuantity()+1;
+                long price = cart.getPrice();
+                long amount = price*quantity;
+                totalAmount.set(totalAmount.get()-(quantity*detail.getPrice()));
+                totalAmount.set(totalAmount.get()+amount);
+                checkUniqueProduct.put(cart.getProduct().getId(), new OrderDetailResponse(
+                        cart.getProduct().getId(), cart.getProduct().getName(), quantity, price, amount
+                ));
+            }else {
+                checkUniqueProduct.put(cart.getProduct().getId(), new OrderDetailResponse(
+                        cart.getProduct().getId(), cart.getProduct().getName(), 1, cart.getProduct().getPrice(), cart.getProduct().getPrice()
+                ));
+                totalAmount.set(totalAmount.get()+cart.getProduct().getPrice());
+            }
+
+            cart.setStatus(CartStatus.CHECKED.name());
+            cartRepository.save(cart);
 
         });
 
 
-        AtomicReference<Long> totalAmount = new AtomicReference<>(0L);
-        checkUniqueProduct.forEach((cart_id, count)->{
-                Cart cart = cartRepository.findById(cart_id).orElseThrow(
-                        ()-> new AppException(ErrorCode.UNAUTHENTICATED)
-                );
-
-                products.add(OrderDetailResponse.builder()
-                                .product_id(cart.getProduct().getId())
-                                .name(cart.getProduct().getName())
-                                .price(cart.getPrice())
-                                .quantity(count)
-                                .amount(count*cart.getPrice())
-                        .build());
-                totalAmount.updateAndGet(v -> v + (count * cart.getPrice()));
-
-            }
-
-
+        var orders = ordersMapper.toOrders(request);
+        var user = userRepository.findById(id).orElseThrow(
+                ()-> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
+        if(orders.getShipping_address() == null)
+            orders.setShipping_address(user.getDefault_shipping_address());
 
-        Orders orders = ordersMapper.toOrders(request);
+        if(orders.getOrder_phone() == null)
+            orders.setOrder_phone(user.getPhone());
 
-        ordersRepository.save(orders);
-        return OrdersResponse.builder()
-                .id(orders.getId())
-                .build();
+        orders.setAmount(totalAmount.get());
+        orders.setOrder_date(LocalDateTime.now());
+        orders.setOrder_status(OrderStatus.PROCESSING.name());
 
-
-
-
-
+        OrdersResponse ordersResponse = ordersMapper.toOrdersResponse(ordersRepository.save(orders));
+        ordersResponse.setProductsList(checkUniqueProduct);
+        return ordersResponse;
     }
 
 
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ProductsResponse updateProducts(String id, ProductsUpdateRequest request){
-//        Products products = productsRepository.findById(id).orElseThrow(
-//                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
-//        );
-//
-//        if (!request.getName().equals(products.getName()) || !request.getBrand().equals(products.getBrand()))
-//            if(productsRepository.existsByNameAndBrand(request.getName(), request.getBrand()))
-//                throw new AppException(ErrorCode.PRODUCT_EXISTED);
-//
-//        var context = SecurityContextHolder.getContext();
-//        String created_by = context.getAuthentication().getName();
-//
-//        if(!products.getPrice().equals(request.getPrice())  && request.getPrice() != null) {
-//            ProductHistory productHistory = ProductHistory.builder()
-//                    .product(products)
-//                    .price(products.getPrice())
-//                    .created_by(created_by)
-//                    .created_date(LocalDateTime.now())
-//                    .build();
-//
-//            productHistoryRepository.save(productHistory);
-//        }
-//
-//        productsMapper.updateProducts(products, request);
-//
-//
-//        return productsMapper.toProductsResponse(productsRepository.save(products));
-//    }
-//
-//
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public void deleteProducts(String id){
-//        productsRepository.deleteById(id);
-//    }
-//
-//
-//
-//    public ProductsResponse getProduct(String id){
-//        return productsMapper.toProductsResponse(productsRepository.findById(id).
-//                orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)));
-//    }
-//
-//
-//
-//
-//
-//    public List<ProductsResponse> getProducts(){
-//        return productsRepository.findAll().stream().map(productsMapper::toProductsResponse).toList();
-//    }
-//
-//
-//
-//    //CART
-//
-//    @PreAuthorize("hasRole('USER')")
-//    public CartResponse createCart(CartCreationRequest request) {
-//
+
+//    @PostAuthorize("returnObject.id == authentication.name")
+//    public void updateOrder(OrdersUpdateRequest request){
 //        var context = SecurityContextHolder.getContext();
 //        String id = context.getAuthentication().getName();
 //
-//        Products products = productsRepository.findById(request.getProduct_id()).orElseThrow(
-//                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
-//        );
-//
-//        User user = userRepository.findById(id).orElseThrow(
-//                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
-//        );
 //
 //
-//        Cart cart = cartMapper.toCart(request);
-//        cart.setProduct(products);
-//        cart.setUser(user);
-//        cart.setPrice(products.getPrice());
-//
-//
-//        return cartMapper.toCartResponse(cartRepository.save(cart));
-//
-//    }
-//
-//
-//    @PreAuthorize("hasRole('USER')")
-//    public void deleteCart(String id){
-//        cartRepository.deleteById(id);
-//    }
-//
-//
-//    @PreAuthorize("hasRole('USER')")
-//    public List<CartResponse> getCarts(){
-//        var context = SecurityContextHolder.getContext();
-//        String id = context.getAuthentication().getName();
-//
-//        User user = userRepository.findById(id).orElseThrow(
-//                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
-//        );
-//
-//        return cartRepository.findAllByUserId(id).stream().map(cartMapper::toCartResponse).toList();
+//        return userMapper.toUserResponse(userRepository.save(user));
 //    }
 
 
