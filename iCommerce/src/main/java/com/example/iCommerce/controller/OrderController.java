@@ -1,9 +1,6 @@
 package com.example.iCommerce.controller;
 
-import com.example.iCommerce.dto.request.CartCreationRequest;
-import com.example.iCommerce.dto.request.OrdersCreationRequest;
-import com.example.iCommerce.dto.request.ProductsCreationRequest;
-import com.example.iCommerce.dto.request.ProductsUpdateRequest;
+import com.example.iCommerce.dto.request.*;
 import com.example.iCommerce.dto.response.ApiResponse;
 import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.OrdersResponse;
@@ -35,15 +32,16 @@ public class OrderController {
 
 
 
-//    @PutMapping("/{id}")
-//    ApiResponse<ProductsResponse> updateProducts(@PathVariable("id") String id, @RequestBody ProductsUpdateRequest request){
-//        return ApiResponse.<ProductsResponse>builder()
-//                .result( productsService.updateProducts(id, request))
-//                .build();
-//
-//    }
-//
-//
+    @PutMapping("/{id}")
+    ApiResponse<String> updateOrder(@PathVariable("id") String id, @RequestBody OrdersUpdateRequest request){
+        orderService.updateOrder(id, request);
+        return ApiResponse.<String>builder()
+                .result("SUCCEED")
+                .build();
+
+    }
+
+
 //
 //    @DeleteMapping("/{id}")
 //    ApiResponse<String> deleteProducts(@PathVariable String id){

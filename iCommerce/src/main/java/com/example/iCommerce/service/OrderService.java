@@ -18,8 +18,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.Order;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -99,15 +101,33 @@ public class OrderService {
 
 
 
-//    @PostAuthorize("returnObject.id == authentication.name")
-//    public void updateOrder(OrdersUpdateRequest request){
-//        var context = SecurityContextHolder.getContext();
-//        String id = context.getAuthentication().getName();
-//
-//
-//
-//        return userMapper.toUserResponse(userRepository.save(user));
-//    }
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public void updateOrder(String id,OrdersUpdateRequest request){
+        var context = SecurityContextHolder.getContext();
+        Authentication authentication = context.getAuthentication();
+
+        String role = authentication.getAuthorities().iterator().next().getAuthority();
+
+        if (role.equals("ROLE_USER")) {
+            if (!request.getStatus().equals(OrderStatus.CANCELED.name())) {
+                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            }
+        } else if (role.equals("ROLE_ADMIN")) {
+            if (!request.getStatus().equals(OrderStatus.APPROVED.name()) && !request.getStatus().equals(OrderStatus.REFUSED.name())) {
+                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            }
+        } else {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Orders orders = ordersRepository.findById(id).orElseThrow(
+                ()-> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION)
+        );
+        orders.setOrder_status(request.getStatus());
+        ordersRepository.save(orders);
+
+
+    }
 
 
 
