@@ -6,8 +6,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
 
 @Getter
 @Setter
@@ -16,17 +14,19 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Orders {
+@Table(name = "order_history")
+public class OrderHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    String products;
-    Long amount;
-    String shipping_address;
-    String order_phone;
-    LocalDateTime order_date;
-    String order_status;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<OrderHistory> order_histories;
+    String action_key;
+    String action_name;
+    String created_by;
+    LocalDateTime created_date;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false) // Khai báo khóa ngoại product_id liên kết với bảng Products
+    Orders order;
+
 }

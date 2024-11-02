@@ -4,10 +4,12 @@ package com.example.iCommerce.service;
 import com.example.iCommerce.dto.request.OrdersCreationRequest;
 import com.example.iCommerce.dto.request.OrdersUpdateRequest;
 import com.example.iCommerce.dto.request.UserUpdateRequest;
+import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.OrderDetailResponse;
 import com.example.iCommerce.dto.response.OrdersResponse;
 import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.entity.*;
+import com.example.iCommerce.enums.ActionOrder;
 import com.example.iCommerce.enums.CartStatus;
 import com.example.iCommerce.enums.OrderStatus;
 import com.example.iCommerce.exception.AppException;
@@ -38,7 +40,7 @@ public class OrderService {
     OrdersMapper ordersMapper;
     CartRepository cartRepository;
     UserRepository userRepository;
-    ProductsRepository productsRepository;
+    OrderHistoryRepository orderHistoryRepository;
 
 
     @PreAuthorize("hasRole('USER')")
@@ -96,6 +98,7 @@ public class OrderService {
 
         OrdersResponse ordersResponse = ordersMapper.toOrdersResponse(ordersRepository.save(orders));
         ordersResponse.setProductsList(checkUniqueProduct);
+        createOrderHistory(orders.getId(), ActionOrder.CREATE.getKey(), ActionOrder.CREATE.getName(), id);
         return ordersResponse;
     }
 
@@ -105,18 +108,26 @@ public class OrderService {
     public void updateOrder(String id,OrdersUpdateRequest request){
         var context = SecurityContextHolder.getContext();
         Authentication authentication = context.getAuthentication();
-
+        ActionOrder actionOrder;
+        
+        
         String role = authentication.getAuthorities().iterator().next().getAuthority();
-
-        if (role.equals("ROLE_USER")) {
-            if (!request.getOrder_status().equals(OrderStatus.CANCELED.name())) {
+        if (request.getOrder_status().equals(OrderStatus.CANCELED.name())){
+            if (!role.equals("ROLE_USER")) {
                 throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
             }
-        } else if (role.equals("ROLE_ADMIN")) {
-            if (!request.getOrder_status().equals(OrderStatus.APPROVED.name()) && !request.getOrder_status().equals(OrderStatus.REFUSED.name())) {
+            actionOrder = ActionOrder.CANCEL;
+        } else if (request.getOrder_status().equals(OrderStatus.APPROVED.name())) {
+            if (!role.equals("ROLE_ADMIN")) {
                 throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
             }
-        } else {
+            actionOrder = ActionOrder.APPROVE;
+        } else if (request.getOrder_status().equals(OrderStatus.REFUSED.name())) {
+            if (!role.equals("ROLE_ADMIN")) {
+                throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+            }
+            actionOrder = ActionOrder.REFUSE;
+        }else {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
@@ -124,11 +135,35 @@ public class OrderService {
                 ()-> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION)
         );
         orders.setOrder_status(request.getOrder_status());
+        createOrderHistory(orders.getId(), actionOrder.getKey(), actionOrder.getName(), id);
         ordersRepository.save(orders);
 
 
     }
 
+//
+//    @PreAuthorize("hasRole('USER')")
+//    public List<CartResponse> getUserOrders(){
+//        var context = SecurityContextHolder.getContext();
+//        String id = context.getAuthentication().getName();
+//
+//
+//        cartRepository.findAllByUserId(id).f
+//    }
+
+
+    //ORDER HISTORY
+    public void createOrderHistory(String order_id, String key, String name, String user_id){
+        Orders orders = ordersRepository.findById(order_id).orElseThrow();
+        OrderHistory orderHistory = OrderHistory.builder()
+                .order(orders)
+                .action_key(key)
+                .action_name(name)
+                .created_by(user_id)
+                .created_date(LocalDateTime.now())
+                .build();
+        orderHistoryRepository.save(orderHistory);
+    }
 
 
 
