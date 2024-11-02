@@ -7,6 +7,7 @@ import com.example.iCommerce.dto.request.ProductsUpdateRequest;
 import com.example.iCommerce.dto.response.OrderDetailResponse;
 import com.example.iCommerce.dto.response.OrdersResponse;
 import com.example.iCommerce.dto.response.ProductsResponse;
+import com.example.iCommerce.dto.response.SummaryOrdersResponse;
 import com.example.iCommerce.entity.Orders;
 import com.example.iCommerce.entity.Products;
 import com.example.iCommerce.exception.AppException;
@@ -23,6 +24,7 @@ import java.util.List;
     @Mapping(target = "products", expression = "java(mapProducts(request.getProducts()))")
     Orders toOrders(OrdersCreationRequest request);
     OrdersResponse toOrdersResponse(Orders orders);
+    SummaryOrdersResponse toSummaryOrdersResponse(Orders orders);
 
 
     default String mapProducts(List<String> products) {

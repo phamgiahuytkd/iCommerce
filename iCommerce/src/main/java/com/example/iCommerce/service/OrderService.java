@@ -4,10 +4,7 @@ package com.example.iCommerce.service;
 import com.example.iCommerce.dto.request.OrdersCreationRequest;
 import com.example.iCommerce.dto.request.OrdersUpdateRequest;
 import com.example.iCommerce.dto.request.UserUpdateRequest;
-import com.example.iCommerce.dto.response.CartResponse;
-import com.example.iCommerce.dto.response.OrderDetailResponse;
-import com.example.iCommerce.dto.response.OrdersResponse;
-import com.example.iCommerce.dto.response.UserResponse;
+import com.example.iCommerce.dto.response.*;
 import com.example.iCommerce.entity.*;
 import com.example.iCommerce.enums.ActionOrder;
 import com.example.iCommerce.enums.CartStatus;
@@ -135,22 +132,70 @@ public class OrderService {
                 ()-> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION)
         );
         orders.setOrder_status(request.getOrder_status());
-        createOrderHistory(orders.getId(), actionOrder.getKey(), actionOrder.getName(), id);
+        createOrderHistory(orders.getId(), actionOrder.getKey(), actionOrder.getName(), authentication.getName());
         ordersRepository.save(orders);
 
 
     }
 
-//
-//    @PreAuthorize("hasRole('USER')")
-//    public List<CartResponse> getUserOrders(){
-//        var context = SecurityContextHolder.getContext();
-//        String id = context.getAuthentication().getName();
-//
-//
-//        cartRepository.findAllByUserId(id).f
-//    }
 
+    @PreAuthorize("hasRole('USER')")
+    public List<SummaryOrdersResponse> getUserOrders(){
+        var context = SecurityContextHolder.getContext();
+        String id = context.getAuthentication().getName();
+
+
+        return orderHistoryRepository.findDistinctOrdersByCreatedBy(id).stream().map(ordersMapper::toSummaryOrdersResponse).toList();
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<SummaryOrdersResponse> getOrders(){
+        return ordersRepository.findAll().stream().map(ordersMapper::toSummaryOrdersResponse).toList();
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public OrdersResponse getOrder(String id){
+
+        Orders orders = ordersRepository.findById(id).orElseThrow(
+                ()-> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION)
+        );
+
+        AtomicLong totalAmount = new AtomicLong(0L);
+
+        Map<String, OrderDetailResponse> checkUniqueProduct = new HashMap<>();
+
+        Arrays.asList(orders.getProducts().split(",")).forEach(cart_id ->{
+            Cart cart = cartRepository.findById(cart_id).orElseThrow(
+                    ()-> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
+            );
+
+
+            if(checkUniqueProduct.containsKey(cart.getProduct().getId())){
+                OrderDetailResponse detail = checkUniqueProduct.get(cart.getProduct().getId());
+                int quantity = detail.getQuantity()+1;
+                long price = cart.getPrice();
+                long amount = price*quantity;
+                totalAmount.set(totalAmount.get()-(quantity*detail.getPrice()));
+                totalAmount.set(totalAmount.get()+amount);
+                checkUniqueProduct.put(cart.getProduct().getId(), new OrderDetailResponse(
+                        cart.getProduct().getId(), cart.getProduct().getName(), quantity, price, amount
+                ));
+            }else {
+                checkUniqueProduct.put(cart.getProduct().getId(), new OrderDetailResponse(
+                        cart.getProduct().getId(), cart.getProduct().getName(), 1, cart.getProduct().getPrice(), cart.getProduct().getPrice()
+                ));
+                totalAmount.set(totalAmount.get()+cart.getProduct().getPrice());
+            }
+
+        });
+
+        OrdersResponse ordersResponse = ordersMapper.toOrdersResponse(orders);
+        ordersResponse.setProductsList(checkUniqueProduct);
+        return ordersResponse;
+
+
+    }
 
     //ORDER HISTORY
     public void createOrderHistory(String order_id, String key, String name, String user_id){

@@ -1,10 +1,7 @@
 package com.example.iCommerce.controller;
 
 import com.example.iCommerce.dto.request.*;
-import com.example.iCommerce.dto.response.ApiResponse;
-import com.example.iCommerce.dto.response.CartResponse;
-import com.example.iCommerce.dto.response.OrdersResponse;
-import com.example.iCommerce.dto.response.ProductsResponse;
+import com.example.iCommerce.dto.response.*;
 import com.example.iCommerce.repository.CartRepository;
 import com.example.iCommerce.service.OrderService;
 import com.example.iCommerce.service.ProductsService;
@@ -42,24 +39,33 @@ public class OrderController {
     }
 
 
-//
-//    @DeleteMapping("/{id}")
-//    ApiResponse<String> deleteProducts(@PathVariable String id){
-//        productsService.deleteProducts(id);
-//        return ApiResponse.<String>builder()
-//                .result("SUCCEED")
-//                .build();
-//    }
-//
-//
-//    @GetMapping("/{id}")
-//    ApiResponse<ProductsResponse> getProduct(@PathVariable("id") String id){
-//
-//        return ApiResponse.<ProductsResponse>builder()
-//                .result(productsService.getProduct(id))
-//                .build();
-//    }
-//
+
+    @GetMapping("/{id}")
+    ApiResponse<OrdersResponse> getOrder(@PathVariable("id") String id){
+
+        return ApiResponse.<OrdersResponse>builder()
+                .result(orderService.getOrder(id))
+                .build();
+    }
+
+
+    @GetMapping("/myorder")
+    ApiResponse<List<SummaryOrdersResponse>> getUserOrders(){
+
+        return ApiResponse.<List<SummaryOrdersResponse>>builder()
+                .result(orderService.getUserOrders())
+                .build();
+    }
+
+
+    @GetMapping("/allorder")
+    ApiResponse<List<SummaryOrdersResponse>> getOrders(){
+
+        return ApiResponse.<List<SummaryOrdersResponse>>builder()
+                .result(orderService.getOrders())
+                .build();
+    }
+
 //
 //
 //
