@@ -10,6 +10,7 @@ import com.example.iCommerce.entity.Cart;
 import com.example.iCommerce.entity.ProductHistory;
 import com.example.iCommerce.entity.Products;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.enums.ActionKey;
 import com.example.iCommerce.enums.CartStatus;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
@@ -39,6 +40,7 @@ public class ProductsService {
     CartMapper cartMapper;
     CartRepository cartRepository;
     UserRepository userRepository;
+    TrackingService trackingService;
 
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -136,6 +138,7 @@ public class ProductsService {
         cart.setPrice(products.getPrice());
         cart.setStatus(CartStatus.WAIT.name());
 
+        trackingService.tracking(user.getId(), ActionKey.ADD_CART.name(), "User thêm sản phẩm " + cart.getProduct().getId());
 
         return cartMapper.toCartResponse(cartRepository.save(cart));
 

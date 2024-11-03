@@ -5,6 +5,7 @@ import com.example.iCommerce.dto.request.UserCreationRequest;
 import com.example.iCommerce.dto.request.UserUpdateRequest;
 import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.enums.ActionKey;
 import com.example.iCommerce.enums.Role;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
@@ -30,6 +31,7 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    TrackingService trackingService;
 
 
     public UserResponse createUser(UserCreationRequest request) {
@@ -42,6 +44,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         user.setUser_type(Role.USER.name());
+
 
         return userMapper.toUserResponse(userRepository.save(user));
 
@@ -59,6 +62,8 @@ public class UserService {
         userMapper.updateUser(user, request);
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        trackingService.tracking(user.getId(), ActionKey.UPDATE_INFO.name(), "User thay đổi thông tin cá nhân");
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
@@ -93,6 +98,9 @@ public class UserService {
 
         return userMapper.toUserResponse(user);
     }
+
+
+
 
 
 

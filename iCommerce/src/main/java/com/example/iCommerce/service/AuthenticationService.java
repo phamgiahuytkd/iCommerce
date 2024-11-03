@@ -8,6 +8,7 @@ import com.example.iCommerce.dto.response.AuthenticationResponse;
 import com.example.iCommerce.dto.response.IntrospectResponse;
 import com.example.iCommerce.entity.InvalidatedToken;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.enums.ActionKey;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.repository.InvalidatedTokenRepository;
@@ -55,6 +56,8 @@ public class AuthenticationService {
 
     InvalidatedTokenRepository invalidatedTokenRepository;
 
+    TrackingService trackingService;
+
 
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
@@ -91,6 +94,8 @@ public class AuthenticationService {
 
         var token = generateToken(user);
 
+
+        trackingService.tracking(user.getId(), ActionKey.LOGIN.name(), "User đăng nhập vào trang web");
 
         return AuthenticationResponse.builder()
                 .token(token)
@@ -159,10 +164,14 @@ public class AuthenticationService {
         String jit = signToken.getJWTClaimsSet().getJWTID();
         Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
 
+        String created_by = signToken.getJWTClaimsSet().getSubject();
+
         InvalidatedToken invalidatedToken = InvalidatedToken.builder()
                 .id(jit)
                 .expiryTime(expiryTime)
                 .build();
+
+        trackingService.tracking(created_by, ActionKey.LOGOUT.name(), "User đăng xuất khỏi trang web");
 
         invalidatedTokenRepository.save(invalidatedToken);
     }
@@ -188,6 +197,7 @@ public class AuthenticationService {
 
         var token = generateToken(user);
 
+        trackingService.tracking(user.getId(), ActionKey.LOGIN.name(), "User đăng nhập vào trang web");
 
         return AuthenticationResponse.builder()
                 .token(token)

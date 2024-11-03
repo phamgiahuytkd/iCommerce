@@ -6,6 +6,7 @@ import com.example.iCommerce.dto.request.OrdersUpdateRequest;
 import com.example.iCommerce.dto.request.UserUpdateRequest;
 import com.example.iCommerce.dto.response.*;
 import com.example.iCommerce.entity.*;
+import com.example.iCommerce.enums.ActionKey;
 import com.example.iCommerce.enums.ActionOrder;
 import com.example.iCommerce.enums.CartStatus;
 import com.example.iCommerce.enums.OrderStatus;
@@ -38,6 +39,7 @@ public class OrderService {
     CartRepository cartRepository;
     UserRepository userRepository;
     OrderHistoryRepository orderHistoryRepository;
+    TrackingService trackingService;
 
 
     @PreAuthorize("hasRole('USER')")
@@ -74,6 +76,7 @@ public class OrderService {
             }
 
             cart.setStatus(CartStatus.CHECKED.name());
+
             cartRepository.save(cart);
 
         });
@@ -96,6 +99,9 @@ public class OrderService {
         OrdersResponse ordersResponse = ordersMapper.toOrdersResponse(ordersRepository.save(orders));
         ordersResponse.setProductsList(checkUniqueProduct);
         createOrderHistory(orders.getId(), ActionOrder.CREATE.getKey(), ActionOrder.CREATE.getName(), id);
+
+        trackingService.tracking(user.getId() ,ActionKey.CHECKOUT.name(), "User thanh toán đơn hàng " + orders.getId());
+
         return ordersResponse;
     }
 
