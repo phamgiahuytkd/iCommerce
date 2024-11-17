@@ -1,6 +1,7 @@
 package com.example.iCommerce.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@JsonIgnoreProperties({"carts"})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

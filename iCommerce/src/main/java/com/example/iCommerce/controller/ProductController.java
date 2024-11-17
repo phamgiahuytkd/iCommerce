@@ -3,18 +3,22 @@ package com.example.iCommerce.controller;
 import com.example.iCommerce.dto.request.CartCreationRequest;
 import com.example.iCommerce.dto.request.ProductsCreationRequest;
 import com.example.iCommerce.dto.request.ProductsUpdateRequest;
+import com.example.iCommerce.dto.request.SearchProductsRequest;
 import com.example.iCommerce.dto.response.ApiResponse;
 import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.ProductsResponse;
+import com.example.iCommerce.entity.Products;
 import com.example.iCommerce.repository.CartRepository;
 import com.example.iCommerce.service.ProductsService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
@@ -68,6 +72,19 @@ public class ProductController {
                 .build();
     }
 
+    @PostMapping("/search")
+    ApiResponse<List<ProductsResponse>> getSearchProducts(@RequestBody SearchProductsRequest request){
+        return ApiResponse.<List<ProductsResponse>>builder()
+                .result(productsService.getSearchProducts(request))
+                .build();
+    }
+
+
+
+
+
+
+    //CART
 
 
     @PostMapping("/cart")

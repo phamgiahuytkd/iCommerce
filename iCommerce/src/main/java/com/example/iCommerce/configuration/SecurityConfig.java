@@ -27,7 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] POST_PUBLIC = {"/users", "/auth/login", "/auth/introspect", "/auth/logout",
-            "/auth/refresh"
+            "/auth/refresh", "/products/search"
 
     };
 
