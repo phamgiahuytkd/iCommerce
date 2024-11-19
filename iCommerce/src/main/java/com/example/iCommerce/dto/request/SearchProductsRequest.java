@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchProductsRequest {
     String name;
-    Long price;
+    Long min_price;
+    Long max_price;
     String brand;
     String colour;
 }

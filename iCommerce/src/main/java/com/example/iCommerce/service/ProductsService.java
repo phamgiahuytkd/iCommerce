@@ -138,7 +138,7 @@ public class ProductsService {
         }
 
 
-        return productsRepository.findByDynamicQuery(request.getName(), request.getBrand(), request.getColour())
+        return productsRepository.findByDynamicQuery(request.getName(), request.getBrand(), request.getColour(), request.getMin_price(), request.getMax_price())
                 .stream().map(productsMapper::toProductsResponse).toList();
 
 
