@@ -16,5 +16,4 @@ public class UserCreationRequest {
     String default_shipping_address;
     String social_type;
     String social_key;
-    String user_type;
 }
