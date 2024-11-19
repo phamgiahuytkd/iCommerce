@@ -17,22 +17,6 @@ spring:
     show-sql: true
 
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: your-email@gmail.com
-    password: your-email-password
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-
 
 jwt:
   signerKey: "AHbWXn6k9g06iFIaGiCfgCw4QzfQO/AdcNC30hBhLxmhwUyf6bE+7o2UMUrp06K4"
