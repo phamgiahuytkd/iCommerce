@@ -13,6 +13,12 @@ public enum ErrorCode {
     EMAIL_EXISTED(1002, "Email đã tồn tại", HttpStatus.BAD_REQUEST),
     EMAIL_NOT_EXISTED(1003, "Email chưa đăng ký", HttpStatus.BAD_REQUEST),
     PASSWORD_INCORRECT(1004, "Mật khẩu không đúng", HttpStatus.BAD_REQUEST),
+    PASSWORD_INVALID(1005, "Mật khẩu phải trên 8 ký tự. Bao gồm 1 chữ cái viết hoa, 1 ký tự đặc biệt", HttpStatus.BAD_REQUEST),
+    NOT_VALUE(1006, "Không được để trống trường này", HttpStatus.BAD_REQUEST),
+
+
+
+
     PRODUCT_EXISTED(3001, "Sản phẩm đã tồn tại", HttpStatus.BAD_REQUEST),
     PRODUCT_NOT_EXISTED(3002, "Sản phẩm không tồn tại", HttpStatus.BAD_REQUEST),
 
@@ -29,8 +35,6 @@ public enum ErrorCode {
 
 
     USERNAME_INVALID(1005, "User name must be at least {min} character", HttpStatus.BAD_REQUEST),
-    PASSWORD_INVALID(1006, "Password must be at least {min} character", HttpStatus.BAD_REQUEST),
-
     UNAUTHENTICATED(2001, "Lỗi truy cập", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002, "You don't have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age have to be at least {min}", HttpStatus.BAD_REQUEST),

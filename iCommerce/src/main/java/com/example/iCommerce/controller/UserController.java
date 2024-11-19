@@ -5,6 +5,7 @@ import com.example.iCommerce.dto.request.UserUpdateRequest;
 import com.example.iCommerce.dto.response.ApiResponse;
 import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,7 +23,7 @@ public class UserController {
 
 
     @PostMapping
-    ApiResponse<UserResponse> createUser(@RequestBody  UserCreationRequest request){
+    ApiResponse<UserResponse> createUser(@Valid @RequestBody  UserCreationRequest request){
         return ApiResponse.<UserResponse>builder()
                 .result(userService.createUser(request))
                 .build();
