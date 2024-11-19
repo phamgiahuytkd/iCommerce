@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -107,8 +108,13 @@ public class ProductsService {
 
 
     public ProductsResponse getProduct(String id){
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
 
-        trackingService.tracking(id, ActionKey.VIEW_ITEM.name(), "User xem sản phẩm " + id);
+        if (userId != null && !userId.equals("anonymousUser")) {
+            trackingService.tracking(userId, ActionKey.VIEW_ITEM.name(), "User xem sản phẩm " + id);
+        }
+
         return productsMapper.toProductsResponse(productsRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)));
     }
@@ -127,8 +133,9 @@ public class ProductsService {
         String id = context.getAuthentication().getName();
 
 
-
-        trackingService.tracking(id, ActionKey.SEARCH_ITEM.name(), "User tìm kiếm sản phẩm " + request);
+        if (id != null && !id.equals("anonymousUser")) {
+            trackingService.tracking(id, ActionKey.SEARCH_ITEM.name(), "User tìm kiếm sản phẩm " + request);
+        }
 
 
         return productsRepository.findByDynamicQuery(request.getName(), request.getBrand(), request.getColour())

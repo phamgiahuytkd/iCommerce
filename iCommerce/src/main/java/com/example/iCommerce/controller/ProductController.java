@@ -34,7 +34,7 @@ public class ProductController {
                 .build();
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/view/{id}")
     ApiResponse<ProductsResponse> updateProducts(@PathVariable("id") String id, @RequestBody ProductsUpdateRequest request){
         return ApiResponse.<ProductsResponse>builder()
                 .result( productsService.updateProducts(id, request))
@@ -44,7 +44,7 @@ public class ProductController {
 
 
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/view/{id}")
     ApiResponse<String> deleteProducts(@PathVariable String id){
         productsService.deleteProducts(id);
         return ApiResponse.<String>builder()
@@ -53,7 +53,7 @@ public class ProductController {
     }
 
 
-    @GetMapping("/{id}")
+    @GetMapping("/view/{id}")
     ApiResponse<ProductsResponse> getProduct(@PathVariable("id") String id){
 
         return ApiResponse.<ProductsResponse>builder()

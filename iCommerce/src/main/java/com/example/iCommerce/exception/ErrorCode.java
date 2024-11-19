@@ -31,7 +31,7 @@ public enum ErrorCode {
     USERNAME_INVALID(1005, "User name must be at least {min} character", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1006, "Password must be at least {min} character", HttpStatus.BAD_REQUEST),
 
-    UNAUTHENTICATED(2001, "Token không hợp ", HttpStatus.UNAUTHORIZED),
+    UNAUTHENTICATED(2001, "Lỗi truy cập", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(2002, "You don't have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age have to be at least {min}", HttpStatus.BAD_REQUEST),
     ;
