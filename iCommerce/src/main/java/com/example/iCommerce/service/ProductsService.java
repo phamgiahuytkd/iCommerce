@@ -75,9 +75,12 @@ public class ProductsService {
                 () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
         );
 
-        if (!request.getName().equals(products.getName()) || !request.getBrand().equals(products.getBrand()))
-            if(productsRepository.existsByNameAndBrand(request.getName(), request.getBrand()))
+        if ((request.getName() != null && !request.getName().equals(products.getName())) ||
+                (request.getBrand() != null && !request.getBrand().equals(products.getBrand()))) {
+            if (productsRepository.existsByNameAndBrand(request.getName(), request.getBrand())) {
                 throw new AppException(ErrorCode.PRODUCT_EXISTED);
+            }
+        }
 
         var context = SecurityContextHolder.getContext();
         String created_by = context.getAuthentication().getName();
