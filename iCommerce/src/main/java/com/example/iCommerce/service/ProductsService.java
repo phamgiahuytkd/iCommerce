@@ -53,8 +53,8 @@ public class ProductsService {
     @PreAuthorize("hasRole('ADMIN')")
     public ProductsResponse createProducts(ProductsCreationRequest request) {
 
-//        if(productsRepository.existsByNameAndBrand(request.getName(), request.getBrand()))
-//            throw new AppException(ErrorCode.PRODUCT_EXISTED);
+        if(productsRepository.existsByNameAndBrand(request.getName(), request.getBrand()))
+            throw new AppException(ErrorCode.PRODUCT_EXISTED);
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
 

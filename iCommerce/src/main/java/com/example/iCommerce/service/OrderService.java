@@ -63,21 +63,18 @@ public class OrderService {
                 int quantity = detail.getQuantity()+1;
                 long price = cart.getPrice();
                 long amount = price*quantity;
-                totalAmount.set(totalAmount.get()-(quantity*detail.getPrice()));
-                totalAmount.set(totalAmount.get()+amount);
                 checkUniqueProduct.put(cart.getProduct().getId(), new OrderDetailResponse(
                         cart.getProduct().getId(), cart.getProduct().getName(), quantity, price, amount
                 ));
             }else {
                 checkUniqueProduct.put(cart.getProduct().getId(), new OrderDetailResponse(
-                        cart.getProduct().getId(), cart.getProduct().getName(), 1, cart.getProduct().getPrice(), cart.getProduct().getPrice()
+                        cart.getProduct().getId(), cart.getProduct().getName(), 1, cart.getPrice(), cart.getPrice()
                 ));
-                totalAmount.set(totalAmount.get()+cart.getProduct().getPrice());
+
             }
-
             cart.setStatus(CartStatus.CHECKED.name());
-
             cartRepository.save(cart);
+            totalAmount.set(totalAmount.get()+cart.getPrice());
 
         });
 
@@ -86,11 +83,18 @@ public class OrderService {
         var user = userRepository.findById(id).orElseThrow(
                 ()-> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
-        if(orders.getShipping_address() == null)
+        if(orders.getShipping_address() == null) {
+            if(user.getDefault_shipping_address() == null)
+                throw new AppException(ErrorCode.NO_ADDRESS);
             orders.setShipping_address(user.getDefault_shipping_address());
 
-        if(orders.getOrder_phone() == null)
+        }
+
+        if(orders.getOrder_phone() == null) {
+            if(user.getDefault_shipping_address() == null)
+                throw new AppException(ErrorCode.NO_PHONE_NUMBER);
             orders.setOrder_phone(user.getPhone());
+        }
 
         orders.setAmount(totalAmount.get());
         orders.setOrder_date(LocalDateTime.now());

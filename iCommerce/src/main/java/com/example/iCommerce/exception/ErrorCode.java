@@ -15,6 +15,8 @@ public enum ErrorCode {
     PASSWORD_INCORRECT(1004, "Mật khẩu không đúng", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1005, "Mật khẩu phải trên 8 ký tự. Bao gồm 1 chữ cái viết hoa, 1 ký tự đặc biệt", HttpStatus.BAD_REQUEST),
     NOT_VALUE(1006, "Không được để trống trường này", HttpStatus.BAD_REQUEST),
+    NO_ADDRESS(1007, "Vui lòng thêm địa chỉ giao hàng", HttpStatus.BAD_REQUEST),
+    NO_PHONE_NUMBER(1008, "Vui lòng thêm số điện thoại giao hàng", HttpStatus.BAD_REQUEST),
 
 
 
