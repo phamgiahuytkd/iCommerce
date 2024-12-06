@@ -43,6 +43,18 @@ public class ProductController {
     }
 
 
+    @PutMapping("/update/{brand}/{name}")
+    public ApiResponse<List<ProductsResponse>> updateProductsByBrandAndName(
+            @PathVariable String brand,
+            @PathVariable String name,
+            @RequestBody ProductsUpdateRequest request) {
+
+        return ApiResponse.<List<ProductsResponse>>builder()
+                .result(productsService.updateProductsByBrandAndName(brand, name, request))
+                .build();
+    }
+
+
 
     @DeleteMapping("/view/{id}")
     ApiResponse<String> deleteProducts(@PathVariable String id){

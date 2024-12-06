@@ -103,6 +103,43 @@ public class ProductsService {
     }
 
 
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<ProductsResponse> updateProductsByBrandAndName(String brand, String name, ProductsUpdateRequest request) {
+        // Tìm tất cả các sản phẩm có brand và name trùng khớp
+        List<Products> productsList = productsRepository.findByBrandAndName(brand, name);
+
+        if (productsList.isEmpty()) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTED);
+        }
+
+        var context = SecurityContextHolder.getContext();
+        String created_by = context.getAuthentication().getName();
+
+        // Lưu lịch sử thay đổi giá (nếu có)
+        for (Products product : productsList) {
+            if (request.getPrice() != null && !request.getPrice().equals(product.getPrice())) {
+                ProductHistory productHistory = ProductHistory.builder()
+                        .product(product)
+                        .price(product.getPrice())
+                        .created_by(created_by)
+                        .created_date(LocalDateTime.now())
+                        .build();
+                productHistoryRepository.save(productHistory);
+            }
+
+            // Cập nhật các thuộc tính của sản phẩm
+            productsMapper.updateProducts(product, request);
+        }
+
+        // Lưu lại tất cả sản phẩm đã cập nhật
+        productsRepository.saveAll(productsList);
+
+        // Chuyển đổi danh sách sản phẩm đã cập nhật thành danh sách response
+        return productsList.stream().map(productsMapper::toProductsResponse).toList();
+    }
+
+
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteProducts(String id){
         productsRepository.deleteById(id);
