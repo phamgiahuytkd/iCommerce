@@ -29,7 +29,7 @@ public class SecurityConfig {
 
     };
 
-    private final String[] GET_PUBLIC = {"/products", "/products/view/{id}"
+    private final String[] GET_PUBLIC = {"/products", "/products/view/{id}", "/images/{imageName}"
 
     };
 
