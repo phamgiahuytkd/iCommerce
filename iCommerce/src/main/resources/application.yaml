@@ -2,6 +2,11 @@ server:
   port: 8080
   servlet:
     context-path: /iCommerce
+    multipart:
+      enabled: true # Bật tính năng multipart (upload file)
+      max-file-size: 2000MB  # Giới hạn kích thước tối đa của file là 20MB
+      max-request-size: 2000MB
+
 
 
 
@@ -16,11 +21,20 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  web:
+    resources:
+      static-locations: classpath:/static/, file:./uploads/
+
 
 
 jwt:
   signerKey: "AHbWXn6k9g06iFIaGiCfgCw4QzfQO/AdcNC30hBhLxmhwUyf6bE+7o2UMUrp06K4"
   valid-duration: 3600 #second
   refreshable-duration: 36000 #second
+
+logging:
+  level:
+    org.springframework.web: DEBUG # Cấu hình log mức độ DEBUG cho Spring Web
+
 
 

@@ -17,6 +17,7 @@ public enum ErrorCode {
     NOT_VALUE(1006, "Không được để trống trường này", HttpStatus.BAD_REQUEST),
     NO_ADDRESS(1007, "Vui lòng thêm địa chỉ giao hàng", HttpStatus.BAD_REQUEST),
     NO_PHONE_NUMBER(1008, "Vui lòng thêm số điện thoại giao hàng", HttpStatus.BAD_REQUEST),
+    MAX_SIZE_FILE(1009, "Kích thuớc tệp quá giới hạn", HttpStatus.BAD_REQUEST),
 
 
 

@@ -19,6 +19,5 @@ public class ProductsCreationRequest {
     @NotNullConstraint(notNull = true, notEmptyString = true, message = "NOT_VALUE")
     String brand;
     String colour;
-    String image;
     int stock;
 }

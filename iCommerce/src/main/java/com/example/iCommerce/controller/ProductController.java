@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -28,9 +30,10 @@ public class ProductController {
 
 
     @PostMapping
-    ApiResponse<ProductsResponse> createProducts(@RequestBody ProductsCreationRequest request){
-        return ApiResponse.<ProductsResponse>builder()
-                .result(productsService.createProducts(request))
+    ApiResponse<Void> createProducts(@ModelAttribute  ProductsCreationRequest request, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+
+        productsService.createProducts(request, image);
+        return ApiResponse.<Void>builder()
                 .build();
     }
 

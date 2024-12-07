@@ -31,9 +31,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -51,21 +57,42 @@ public class ProductsService {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public ProductsResponse createProducts(ProductsCreationRequest request) {
+    public void createProducts(ProductsCreationRequest request, MultipartFile image) throws IOException {
 
-        if(productsRepository.existsByNameAndBrand(request.getName(), request.getBrand()))
+        if(productsRepository.existsByNameAndBrand(request.getName(), request.getBrand())) {
             throw new AppException(ErrorCode.PRODUCT_EXISTED);
+        }
+
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
 
+        // Lưu file ảnh vào thư mục uploads
+        String uploadDir = "uploads/"; // Bạn có thể thay đổi đường dẫn theo ý muốn
+        Path uploadPath = Paths.get(uploadDir);
 
+        // Tạo thư mục nếu nó chưa tồn tại
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        String originalFileName = image.getOriginalFilename();
+        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        String newFileName = UUID.randomUUID().toString() + extension; // Tên mới duy nhất
+
+        System.out.println("#####" + newFileName);
+
+        Path filePath = uploadPath.resolve(newFileName);
+        image.transferTo(filePath);  // Lưu file ảnh
+
+        // Cập nhật đối tượng Products với đường dẫn ảnh
         Products products = productsMapper.toProducts(request);
         products.setCreated_by(id);
         products.setCreated_date(LocalDateTime.now());
+        products.setImage(newFileName); // Lưu đường dẫn file vào cơ sở dữ liệu
 
+        System.out.println("File saved at: " + filePath);
 
-        return productsMapper.toProductsResponse(productsRepository.save(products));
-
+        // Lưu sản phẩm vào cơ sở dữ liệu
+        productsRepository.save(products);
     }
 
 
