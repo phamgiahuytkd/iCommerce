@@ -61,7 +61,8 @@ public class UserService {
 
         userMapper.updateUser(user, request);
 
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (request.getPassword() != null)
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         trackingService.tracking(user.getId(), ActionKey.UPDATE_INFO.name(), "User thay đổi thông tin cá nhân");
 

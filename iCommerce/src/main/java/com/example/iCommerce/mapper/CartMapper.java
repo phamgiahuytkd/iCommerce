@@ -18,6 +18,7 @@ public interface CartMapper {
     @Mapping(target = "name", source = "product.name")
     @Mapping(target = "price", source = "price")
     @Mapping(target = "image", source = "product.image")
+    @Mapping(target = "colour", source = "product.colour")
     CartResponse toCartResponse(Cart cart);
 
 

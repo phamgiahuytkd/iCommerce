@@ -9,8 +9,10 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartResponse {
+    String id;
     String product_id;
     String name;
     Long price;
     String image;
+    String colour;
 }
