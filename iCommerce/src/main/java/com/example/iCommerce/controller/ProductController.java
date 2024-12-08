@@ -37,6 +37,15 @@ public class ProductController {
                 .build();
     }
 
+
+    @PostMapping("/colors")
+    ApiResponse<Void> addColorProducts(@ModelAttribute  ProductsCreationRequest request, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+
+        productsService.addColorProducts(request, image);
+        return ApiResponse.<Void>builder()
+                .build();
+    }
+
     @PutMapping("/view/{id}")
     ApiResponse<String> updateProducts(@PathVariable("id") String id,  @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
 

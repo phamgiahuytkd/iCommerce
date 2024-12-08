@@ -95,6 +95,39 @@ public class ProductsService {
         productsRepository.save(products);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public void addColorProducts(ProductsCreationRequest request, MultipartFile image) throws IOException {
+
+        var context = SecurityContextHolder.getContext();
+        String id = context.getAuthentication().getName();
+
+        // Lưu file ảnh vào thư mục uploads
+        // Bạn có thể thay đổi đường dẫn theo ý muốn
+        Path uploadPath = Paths.get(uploadDir);
+
+        // Tạo thư mục nếu nó chưa tồn tại
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        String originalFileName = image.getOriginalFilename();
+        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        String newFileName = UUID.randomUUID().toString() + extension; // Tên mới duy nhất
+
+
+        Path filePath = uploadPath.resolve(newFileName);
+        image.transferTo(filePath);  // Lưu file ảnh
+
+        // Cập nhật đối tượng Products với đường dẫn ảnh
+        Products products = productsMapper.toProducts(request);
+        products.setCreated_by(id);
+        products.setCreated_date(LocalDateTime.now());
+        products.setImage(newFileName); // Lưu đường dẫn file vào cơ sở dữ liệu
+
+
+        // Lưu sản phẩm vào cơ sở dữ liệu
+        productsRepository.save(products);
+    }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     public ProductsResponse updateProducts(String id, ProductsUpdateRequest request){
