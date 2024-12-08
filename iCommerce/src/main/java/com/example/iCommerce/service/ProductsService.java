@@ -27,12 +27,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,8 +55,7 @@ public class ProductsService {
     CartRepository cartRepository;
     UserRepository userRepository;
     TrackingService trackingService;
-    private EntityManager entityManager;
-
+    String uploadDir = "uploads/";
 
     @PreAuthorize("hasRole('ADMIN')")
     public void createProducts(ProductsCreationRequest request, MultipartFile image) throws IOException {
@@ -67,7 +68,7 @@ public class ProductsService {
         String id = context.getAuthentication().getName();
 
         // Lưu file ảnh vào thư mục uploads
-        String uploadDir = "uploads/"; // Bạn có thể thay đổi đường dẫn theo ý muốn
+         // Bạn có thể thay đổi đường dẫn theo ý muốn
         Path uploadPath = Paths.get(uploadDir);
 
         // Tạo thư mục nếu nó chưa tồn tại
@@ -78,7 +79,6 @@ public class ProductsService {
         String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
         String newFileName = UUID.randomUUID().toString() + extension; // Tên mới duy nhất
 
-        System.out.println("#####" + newFileName);
 
         Path filePath = uploadPath.resolve(newFileName);
         image.transferTo(filePath);  // Lưu file ảnh
@@ -127,6 +127,36 @@ public class ProductsService {
 
 
         return productsMapper.toProductsResponse(productsRepository.save(products));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public String updateProductsImage(String id, MultipartFile image) throws IOException {
+        Products products = productsRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
+        );
+
+        Path uploadPath = Paths.get(uploadDir);
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        String originalFileName = image.getOriginalFilename();
+        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        String newFileName = UUID.randomUUID().toString() + extension; // Tên mới duy nhất
+
+        Path filePath = uploadPath.resolve(newFileName);
+        image.transferTo(filePath);
+        Path imagePath = Paths.get(uploadDir + products.getImage());
+        File imageFile = imagePath.toFile();
+
+        products.setImage(newFileName);
+
+        productsRepository.save(products);
+
+        return newFileName;
+
+
     }
 
 

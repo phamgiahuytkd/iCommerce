@@ -15,7 +15,6 @@ public class ProductsUpdateRequest {
     Long price;
     String brand;
     String colour;
-    String image;
     LocalDateTime created_date;
     int stock;
 }

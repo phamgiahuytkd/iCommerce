@@ -38,9 +38,10 @@ public class ProductController {
     }
 
     @PutMapping("/view/{id}")
-    ApiResponse<ProductsResponse> updateProducts(@PathVariable("id") String id, @RequestBody ProductsUpdateRequest request){
-        return ApiResponse.<ProductsResponse>builder()
-                .result( productsService.updateProducts(id, request))
+    ApiResponse<String> updateProducts(@PathVariable("id") String id,  @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+
+        return ApiResponse.<String>builder()
+                .result(productsService.updateProductsImage(id, image))
                 .build();
 
     }
