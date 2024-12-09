@@ -311,6 +311,11 @@ public class ProductsService {
         cartRepository.deleteById(id);
     }
 
+    @PreAuthorize("hasRole('USER')")
+    public void deleteCartByProductId(String id){
+        cartRepository.deleteAllByProductId(id);
+    }
+
 
     @PreAuthorize("hasRole('USER')")
     public List<CartResponse> getCarts(){

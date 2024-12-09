@@ -137,5 +137,14 @@ public class ProductController {
     }
 
 
+    @DeleteMapping("/cart-product/{id}")
+    ApiResponse<String> deleteCartByProductID(@PathVariable String id){
+        productsService.deleteCartByProductId(id);
+        return ApiResponse.<String>builder()
+                .result("Succeed")
+                .build();
+    }
+
+
 
 }
