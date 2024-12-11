@@ -14,6 +14,7 @@ import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.mapper.OrdersMapper;
 import com.example.iCommerce.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -42,6 +43,7 @@ public class OrderService {
     TrackingService trackingService;
 
 
+    @Transactional
     @PreAuthorize("hasRole('USER')")
     public OrdersResponse createOrders(OrdersCreationRequest request) {
         var context = SecurityContextHolder.getContext();
