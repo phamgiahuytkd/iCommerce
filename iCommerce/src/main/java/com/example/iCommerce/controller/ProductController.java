@@ -30,19 +30,21 @@ public class ProductController {
 
 
     @PostMapping
-    ApiResponse<Void> createProducts(@ModelAttribute  ProductsCreationRequest request, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+    ApiResponse<String> createProducts(@ModelAttribute  ProductsCreationRequest request, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
 
         productsService.createProducts(request, image);
-        return ApiResponse.<Void>builder()
+        return ApiResponse.<String>builder()
+                .result("SUCCEED")
                 .build();
     }
 
 
     @PostMapping("/colors")
-    ApiResponse<Void> addColorProducts(@ModelAttribute  ProductsCreationRequest request, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+    ApiResponse<String> addColorProducts(@ModelAttribute  ProductsCreationRequest request, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
 
         productsService.addColorProducts(request, image);
-        return ApiResponse.<Void>builder()
+        return ApiResponse.<String>builder()
+                .result("SUCCEED")
                 .build();
     }
 
