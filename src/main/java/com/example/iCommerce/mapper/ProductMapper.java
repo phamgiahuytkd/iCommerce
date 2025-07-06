@@ -43,18 +43,22 @@ public interface ProductMapper {
                 .category((String) row[4])
                 .image((String) row[5])
                 .view(row[6] != null ? ((Number) row[6]).longValue() : null)
-                .stock(row[7] != null ? ((Number) row[7]).longValue() : null)
-                .create_day((row[8] instanceof Timestamp) ? ((Timestamp) row[8]).toLocalDateTime() : null)
-                .percent(row[9] != null ? ((Number) row[9]).intValue() : null)
-                .gift_name((String) row[10])
-                .gift_image((String) row[11])
-                .gift_stock(row[12] != null ? ((Number) row[12]).longValue() : null)
-                .gift_start_day((row[13] instanceof Timestamp) ? ((Timestamp) row[13]).toLocalDateTime() : null)
-                .gift_end_day((row[14] instanceof Timestamp) ? ((Timestamp) row[14]).toLocalDateTime() : null)
-                .star(row[15] != null ? ((Number) row[15]).doubleValue() : null)
-                .gift_id((String) row[16]) // Ánh xạ gift_id
+                .description((String) row[7])
+                .instruction((String) row[8])
+                .ingredient((String) row[9])
+                .stock(row[10] != null ? ((Number) row[10]).longValue() : null)
+                .create_day((row[11] instanceof Timestamp) ? ((Timestamp) row[11]).toLocalDateTime() : null)
+                .percent(row[12] != null ? ((Number) row[12]).intValue() : null)
+                .gift_name((String) row[13])
+                .gift_image((String) row[14])
+                .gift_stock(row[15] != null ? ((Number) row[15]).longValue() : null)
+                .gift_start_day((row[16] instanceof Timestamp) ? ((Timestamp) row[16]).toLocalDateTime() : null)
+                .gift_end_day((row[17] instanceof Timestamp) ? ((Timestamp) row[17]).toLocalDateTime() : null)
+                .star(row[18] != null ? ((Number) row[18]).doubleValue() : null)
+                .gift_id((String) row[19])
                 .build();
     }
+
 
     // Chuyển List<Object[]> → List<DTO>
     default List<ProductResponse> toResponses(Page<Object[]> rows) {

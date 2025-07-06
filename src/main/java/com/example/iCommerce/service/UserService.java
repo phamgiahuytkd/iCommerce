@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -40,18 +41,23 @@ public class UserService {
 
 
     public UserResponse createUser(UserRequest request) {
-
-        if(userRepository.existsByEmail(request.getEmail()))
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+
+        // Kiểm tra ngày sinh
+        if (request.getDate_of_birth() != null && !request.getDate_of_birth().isBefore(LocalDate.now())) {
+            throw new AppException(ErrorCode.INVALID_DATE_OF_BIRTH);
+        }
 
         User user = userMapper.toUser(request);
-
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUser_type(Role.USER.name());
         user.setCreate_day(LocalDateTime.now());
-        return userMapper.toUserResponse(userRepository.save(user));
 
+        return userMapper.toUserResponse(userRepository.save(user));
     }
+
 
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")

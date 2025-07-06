@@ -1,6 +1,7 @@
 package com.example.iCommerce.mapper;
 
 import com.example.iCommerce.dto.response.AttributeValueResponse;
+import com.example.iCommerce.dto.response.ProductVariantAttributeValueResponse;
 import com.example.iCommerce.dto.response.ProductVariantResponse;
 import com.example.iCommerce.entity.ProductVariant;
 import com.example.iCommerce.entity.VariantAttribute;
@@ -48,19 +49,16 @@ public interface ProductVariantMapper {
                 .name(row[1] != null ? row[1].toString() : null)
                 .attribute_values(parseAttributeValuesJson(row[2]))
                 .price(row[3] != null ? ((Number) row[3]).longValue() : null)
-                .description(row[4] != null ? row[4].toString() : null)
-                .instruction(row[5] != null ? row[5].toString() : null)
-                .ingredient(row[6] != null ? row[6].toString() : null)
-                .image(row[7] != null ? row[7].toString() : null)
-                .images(row[8] != null ? row[8].toString() : null)
-                .stock(row[9] != null ? ((Number) row[9]).longValue() : null)
-                .create_day(row[10] != null ? ((java.sql.Timestamp) row[10]).toLocalDateTime() : null)
-                .stop_day(row[11] != null ? ((java.sql.Timestamp) row[11]).toLocalDateTime() : null)
-                .percent(row[12] != null ? ((Number) row[12]).intValue() : null)
-                .start_day(row[13] != null ? ((java.sql.Timestamp) row[13]).toLocalDateTime() : null)
-                .end_day(row[14] != null ? ((java.sql.Timestamp) row[14]).toLocalDateTime() : null)
-                .star(row[15] != null ? ((Number) row[15]).doubleValue() : null)
-                .rating_quantity(row[16] != null ? ((Number) row[16]).longValue() : 0L)
+                .image(row[4] != null ? row[4].toString() : null)
+                .images(row[5] != null ? row[5].toString() : null)
+                .stock(row[6] != null ? ((Number) row[6]).longValue() : null)
+                .create_day(row[7] != null ? ((java.sql.Timestamp) row[7]).toLocalDateTime() : null)
+                .stop_day(row[8] != null ? ((java.sql.Timestamp) row[8]).toLocalDateTime() : null)
+                .percent(row[9] != null ? ((Number) row[9]).intValue() : null)
+                .start_day(row[10] != null ? ((java.sql.Timestamp) row[10]).toLocalDateTime() : null)
+                .end_day(row[11] != null ? ((java.sql.Timestamp) row[11]).toLocalDateTime() : null)
+                .star(row[12] != null ? ((Number) row[12]).doubleValue() : null)
+                .rating_quantity(row[13] != null ? ((Number) row[13]).longValue() : 0L)
                 .build();
     }
 
@@ -69,11 +67,11 @@ public interface ProductVariantMapper {
     }
 
 
-    default List<AttributeValueResponse> parseAttributeValuesJson(Object obj) {
+    default List<ProductVariantAttributeValueResponse> parseAttributeValuesJson(Object obj) {
         if (obj == null) return null;
         String json = obj.toString();
         try {
-            return mapper.readValue(json, new TypeReference<List<AttributeValueResponse>>() {});
+            return mapper.readValue(json, new TypeReference<List<ProductVariantAttributeValueResponse>>() {});
         } catch (Exception e) {
             e.printStackTrace();
             return null;

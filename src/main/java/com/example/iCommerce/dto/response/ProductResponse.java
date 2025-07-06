@@ -28,4 +28,10 @@ public class ProductResponse {
     LocalDateTime gift_start_day;
     LocalDateTime gift_end_day;
     Double star;
+
+    // ➕ Thêm mới
+    String description;
+    String instruction;
+    String ingredient;
+
 }

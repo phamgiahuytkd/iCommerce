@@ -14,11 +14,8 @@ import java.util.List;
 public class ProductVariantResponse {
     String id;
     String name;
-    List<AttributeValueResponse> attribute_values;
+    List<ProductVariantAttributeValueResponse> attribute_values;
     Long price;
-    String description;
-    String instruction;
-    String ingredient;
     String image;
     String images;
     Long stock;
