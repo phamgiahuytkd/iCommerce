@@ -2,6 +2,7 @@ package com.example.iCommerce.service;
 
 
 import com.example.iCommerce.dto.request.UserRequest;
+import com.example.iCommerce.dto.response.UserAdminResponse;
 import com.example.iCommerce.dto.response.UserLoggedResponse;
 import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.entity.User;
@@ -13,6 +14,9 @@ import com.example.iCommerce.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,6 +58,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUser_type(Role.USER.name());
         user.setCreate_day(LocalDateTime.now());
+        user.setReputation(100);
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
@@ -129,8 +134,11 @@ public class UserService {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<UserResponse> getUsers(){
-        return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
+    public List<UserAdminResponse> getUsers(){
+        Pageable pageable = PageRequest.of(0, 1000);
+        Page<Object[]> page = userRepository.findAllCustomer(pageable);
+
+        return userMapper.toUserAdminResponses(page);
     }
 
 
@@ -154,7 +162,15 @@ public class UserService {
     }
 
 
-
+    /// ADMIN ///
+    @PreAuthorize("hasRole('ADMIN')")
+    public void blockUser(String id){
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+        );
+        user.setStop_day(LocalDateTime.now());
+        userRepository.save(user);
+    }
 
 
 

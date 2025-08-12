@@ -32,6 +32,8 @@ public class User {
     @Column(columnDefinition = "TEXT")
     String avatar;
     LocalDateTime create_day;
+    Integer reputation;
+    LocalDateTime stop_day;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Cart> carts;

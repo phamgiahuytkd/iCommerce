@@ -62,13 +62,7 @@ public class OrderController {
     }
 
 
-    @GetMapping("/allorder")
-    ApiResponse<List<OrderResponse>> getOrders(){
 
-        return ApiResponse.<List<OrderResponse>>builder()
-                .result(orderService.getOrders())
-                .build();
-    }
 
 
 ////////////////////////////////////
@@ -80,4 +74,20 @@ public class OrderController {
     }
 
 
+    /// admin ///
+    @GetMapping("/allorder/{status}")
+    ApiResponse<List<OrderResponse>> getOrders(@PathVariable("status") String status){
+
+        return ApiResponse.<List<OrderResponse>>builder()
+                .result(orderService.getOrders(status))
+                .build();
+    }
+    
+
+
+
+
+
+
 }
+

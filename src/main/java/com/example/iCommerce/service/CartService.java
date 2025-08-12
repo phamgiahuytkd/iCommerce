@@ -204,7 +204,7 @@ public class CartService {
         return cartMapper.toResponses(page);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public List<CartResponse> getCartsOrder(String orderId){
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
@@ -214,7 +214,7 @@ public class CartService {
         );
 
         Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> raw = cartRepository.findCartResponsesByUserIdAndOrderId(id, orderId, pageable);
+        Page<Object[]> raw = cartRepository.findCartResponsesByUserIdAndOrderId(orderId, pageable);
         return cartMapper.toResponses(raw);
     }
 

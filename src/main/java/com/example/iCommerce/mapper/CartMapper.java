@@ -3,6 +3,7 @@ package com.example.iCommerce.mapper;
 import com.example.iCommerce.dto.response.AttributeValueResponse;
 import com.example.iCommerce.dto.response.CartResponse;
 import com.example.iCommerce.dto.response.GiftResponse;
+import com.example.iCommerce.dto.response.ProductVariantAttributeValueResponse;
 import com.example.iCommerce.entity.Cart;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,10 +61,10 @@ public interface CartMapper {
                 .build();
     }
 
-    default List<AttributeValueResponse> parseAttributeValuesJson(Object obj) {
+    default List<ProductVariantAttributeValueResponse> parseAttributeValuesJson(Object obj) {
         if (obj == null) return null;
         try {
-            return mapper.readValue(obj.toString(), new TypeReference<List<AttributeValueResponse>>() {});
+            return mapper.readValue(obj.toString(), new TypeReference<List<ProductVariantAttributeValueResponse>>() {});
         } catch (Exception e) {
             e.printStackTrace();
             return null;

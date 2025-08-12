@@ -1,13 +1,13 @@
 package com.example.iCommerce.mapper;
 
-import com.example.iCommerce.dto.response.AttributeValueResponse;
 import com.example.iCommerce.dto.response.GiftResponse;
+import com.example.iCommerce.dto.response.ProductVariantAttributeValueResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.Mapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,11 +17,11 @@ public interface GiftMapper {
     ObjectMapper mapper = new ObjectMapper();
 
     // Chuyển JSON từ cột attribute_values -> List<AttributeValueResponse>
-    default List<AttributeValueResponse> parseAttributeValuesJson(Object obj) {
+    default List<ProductVariantAttributeValueResponse> parseAttributeValuesJson(Object obj) {
         if (obj == null) return null;
         String json = obj.toString();
         try {
-            return mapper.readValue(json, new TypeReference<List<AttributeValueResponse>>() {});
+            return mapper.readValue(json, new TypeReference<List<ProductVariantAttributeValueResponse>>() {});
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -36,6 +36,9 @@ public interface GiftMapper {
                 .name(row[2] != null ? row[2].toString() : null)
                 .image(row[3] != null ? row[3].toString() : null)
                 .attribute_values(parseAttributeValuesJson(row[4]))
+                .stock(row[5] != null ? ((Number) row[5]).longValue() : null)
+                .start_day((row[6] instanceof Timestamp) ? ((Timestamp) row[6]).toLocalDateTime() : null)
+                .end_day((row[7] instanceof Timestamp) ? ((Timestamp) row[7]).toLocalDateTime() : null)
                 .build();
     }
 

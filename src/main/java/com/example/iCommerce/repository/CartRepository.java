@@ -50,8 +50,8 @@ public interface CartRepository extends JpaRepository<Cart, String> {
             CASE
                 WHEN av.id IS NOT NULL
                     THEN JSON_OBJECT(
-                        'id', av.id,
-                        'attribute_id', av.attribute_id
+                        'id', av.name,
+                        'attribute_id', a.name
                     )
                 ELSE NULL
             END
@@ -94,8 +94,8 @@ public interface CartRepository extends JpaRepository<Cart, String> {
                     CASE
                         WHEN gav.id IS NOT NULL AND ga.id IS NOT NULL THEN
                             JSON_OBJECT(
-                                'id', gav.id,
-                                'attribute_id', ga.id
+                                'id', gav.name,
+                                'attribute_id', ga.name
                             )
                         ELSE NULL
                     END
@@ -165,8 +165,8 @@ public interface CartRepository extends JpaRepository<Cart, String> {
             CASE
                 WHEN av.id IS NOT NULL
                     THEN JSON_OBJECT(
-                        'id', av.id,
-                        'attribute_id', av.attribute_id
+                        'id', av.name,
+                        'attribute_id', a.name
                     )
                 ELSE NULL
             END
@@ -195,8 +195,8 @@ public interface CartRepository extends JpaRepository<Cart, String> {
                     CASE
                         WHEN gav.id IS NOT NULL AND ga.id IS NOT NULL THEN
                             JSON_OBJECT(
-                                'id', gav.id,
-                                'attribute_id', ga.id
+                                'id', gav.name,
+                                'attribute_id', ga.name
                             )
                         ELSE NULL
                     END
@@ -224,9 +224,7 @@ public interface CartRepository extends JpaRepository<Cart, String> {
     LEFT JOIN attribute_value gav ON gav.id = gva.attribute_value_id
     LEFT JOIN attribute ga ON ga.id = gav.attribute_id
 
-    WHERE
-        c.user_id = :userId
-        AND c.order_id = :orderId
+    WHERE c.order_id = :orderId
 
     GROUP BY
         c.id,
@@ -242,7 +240,7 @@ public interface CartRepository extends JpaRepository<Cart, String> {
 
     ORDER BY c.id
     """, nativeQuery = true)
-    Page<Object[]> findCartResponsesByUserIdAndOrderId(@Param("userId") String userId, @Param("orderId") String orderId, Pageable pageable);
+    Page<Object[]> findCartResponsesByUserIdAndOrderId(@Param("orderId") String orderId, Pageable pageable);
 
 
 

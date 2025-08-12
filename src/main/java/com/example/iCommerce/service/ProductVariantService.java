@@ -45,13 +45,49 @@ public class ProductVariantService {
 
     String uploadDir = "uploads/";
 
-    public List<ProductVariantResponse> getProductVariants(String productId){
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<ProductVariantResponse> getProductVariants(){
+        List<Object[]> raw = productVariantRepository.findProductVariants();
+        return productVariantMapper.toResponses(raw);
+    }
+
+    public List<ProductVariantResponse> getProductVariantsPerProduct(String productId){
         List<Object[]> raw = productVariantRepository.findProductVariantsByProductId(productId);
         return productVariantMapper.toResponses(raw);
     }
 
+
+    public List<ProductVariantResponse> getProductVariantsPerProductAdmin(String productId){
+        List<Object[]> raw = productVariantRepository.findProductVariantsByProductIdAdmin(productId);
+        return productVariantMapper.toResponses(raw);
+    }
+
+
     public PriceRangeResponse getPriceRange() {
         return  productVariantRepository.findPriceRange();
     }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateStopProductVariant(String productId){
+        ProductVariant productVariant = productVariantRepository.findById(productId).orElseThrow(
+                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
+        );
+
+        productVariant.setStop_day(LocalDateTime.now());
+
+        productVariantRepository.save(productVariant);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateContinueProductVariant(String productId){
+        ProductVariant productVariant = productVariantRepository.findById(productId).orElseThrow(
+                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
+        );
+
+        productVariant.setStop_day(null);
+        productVariantRepository.save(productVariant);
+    }
+
 
 }

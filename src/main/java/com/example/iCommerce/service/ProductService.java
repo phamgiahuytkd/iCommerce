@@ -3,6 +3,7 @@ package com.example.iCommerce.service;
 
 import com.example.iCommerce.dto.request.*;
 import com.example.iCommerce.dto.response.PriceRangeResponse;
+import com.example.iCommerce.dto.response.ProductAdminResponse;
 import com.example.iCommerce.dto.response.ProductResponse;
 import com.example.iCommerce.entity.*;
 import com.example.iCommerce.exception.AppException;
@@ -28,10 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -147,7 +145,7 @@ public class ProductService {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void updateProduct(String id, ProductRequest request, MultipartFile image) throws IOException {
+    public void updateProduct(String id, ProductRequest request) throws IOException {
         // Tìm Product
         Product product = productRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
@@ -174,9 +172,17 @@ public class ProductService {
             product.setName(request.getName());
         }
 
-        // Cập nhật View
-        product.setView(0L);
+        if (Objects.nonNull(request.getDescription()) && !request.getDescription().isEmpty()) {
+            product.setDescription(request.getDescription());
+        }
 
+        if (Objects.nonNull(request.getIngredient()) && !request.getIngredient().isEmpty()) {
+            product.setIngredient(request.getIngredient());
+        }
+
+        if (Objects.nonNull(request.getInstruction()) && !request.getInstruction().isEmpty()) {
+            product.setInstruction(request.getInstruction());
+        }
 
         // Xử lý ảnh
         Path uploadPath = Paths.get(uploadDir);
@@ -184,8 +190,8 @@ public class ProductService {
             Files.createDirectories(uploadPath);
         }
 
-        if (image != null && !image.isEmpty()) {
-            String originalFileName = image.getOriginalFilename();
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            String originalFileName = request.getImage().getOriginalFilename();
             if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
                 throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
             }
@@ -193,7 +199,7 @@ public class ProductService {
             String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
             String newFileName = UUID.randomUUID().toString() + extension;
             Path filePath = uploadPath.resolve(newFileName);
-            image.transferTo(filePath);
+            request.getImage().transferTo(filePath);
 
             // Xóa ảnh cũ nếu tồn tại
             if (Objects.nonNull(product.getImage()) && !product.getImage().isEmpty()) {
@@ -204,8 +210,114 @@ public class ProductService {
             product.setImage(newFileName);
         }
 
+
+        for (ProductVariantRequest variantRequest : request.getVariants()) {
+            ProductVariant variant;
+            if (variantRequest.getId() != null && !variantRequest.getId().isEmpty() && !(variantRequest.getId() == "")) {
+                variant = product.getProductVariants().stream()
+                        .filter(v -> v.getId().equals(variantRequest.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+            } else {
+                variant = new ProductVariant();
+                product.getProductVariants().add(variant);
+                variant.setId(UUID.randomUUID().toString());
+                variant.setVariantAttributes(new ArrayList<>());
+            }
+
+            variant.setProduct(product);
+            variant.setPrice(variantRequest.getPrice());
+            variant.setStock(variantRequest.getStock());
+
+            if (variantRequest.getAttributes() != null) {
+                variant.getVariantAttributes().clear();
+
+
+
+                for (String attributeValueId : variantRequest.getAttributes()) {
+                    AttributeValue value = attributeValueRepository.findById(attributeValueId)
+                            .orElseThrow(() -> new AppException(ErrorCode.ATTRIBUTE_VALUE_NOT_EXISTED));
+
+                    VariantAttribute variantAttribute = VariantAttribute.builder()
+                            .productVariant(variant)
+                            .attributeValue(value)
+                            .build();
+
+                    variant.getVariantAttributes().add(variantAttribute);
+                }
+            }
+
+
+            if (variantRequest.getImage() != null && !variantRequest.getImage().isEmpty()) {
+                String originalFileName = variantRequest.getImage().getOriginalFilename();
+                if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
+                    throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
+                }
+
+                String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+                String newFileName = UUID.randomUUID().toString() + extension;
+                Path filePath = uploadPath.resolve(newFileName);
+                variantRequest.getImage().transferTo(filePath);
+
+                // Xóa ảnh cũ nếu tồn tại
+                if (Objects.nonNull(variant.getImage()) && !variant.getImage().isEmpty()) {
+                    Path oldImagePath = Paths.get(uploadDir, variant.getImage());
+                    Files.deleteIfExists(oldImagePath);
+                }
+
+                variant.setImage(newFileName);
+            }
+
+            // XỬ lý multiple ảnh
+            variantRequest.getExistingImages();
+            variant.getImages();
+
+            List<String> keptImageNames = variantRequest.getExistingImages() != null
+                    ? variantRequest.getExistingImages()
+                    : new ArrayList<>();
+
+            List<String> oldImageNames = variant.getImages() != null && !variant.getImages().isBlank()
+                    ? Arrays.asList(variant.getImages().split(","))
+                    : new ArrayList<>();
+
+            List<String> imagesToDelete = oldImageNames.stream()
+                    .filter(img -> !keptImageNames.contains(img))
+                    .collect(Collectors.toList());
+
+            for (String imageName : imagesToDelete) {
+                Path oldImagePath = Paths.get(uploadDir, imageName);
+                Files.deleteIfExists(oldImagePath);
+            }
+
+
+            if (variantRequest.getImages() != null) {
+                for (MultipartFile image : variantRequest.getImages()) {
+                    String fileName = saveImage(image);
+                    if (fileName != null) keptImageNames.add(fileName);
+                }
+            }
+
+            variant.setImages(String.join(",", keptImageNames));
+
+
+            // === 6. Discount ===
+            if (variantRequest.getDiscount() != null) {
+                DiscountRequest d = variantRequest.getDiscount();
+                variant.getDiscounts().add(
+                        Discount.builder()
+                                .productVariant(variant)
+                                .percent(d.getPercent())
+                                .start_day(d.getStart_day())
+                                .end_day(d.getEnd_day())
+                                .build()
+                );
+            }
+
+        }
+
         // Lưu Product
         productRepository.save(product);
+
     }
 
 
@@ -345,6 +457,18 @@ public class ProductService {
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
 
         loveProductRepository.delete(loveProduct);
+    }
+
+
+
+    /// admin ///
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProductAdminResponse getProductAdmin(String id) {
+        List<Object[]> product = productRepository.getProductAdminById(id);
+        if (product.size() < 1) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTED);
+        }
+        return productMapper.toAdminResponse(product.get(0)); // <-- Bạn phải tự viết mapper nhận Object[]
     }
 
 

@@ -94,17 +94,26 @@ public class RatingService {
         // Chỉ xử lý nếu có ảnh
         if (images != null && !images.isEmpty()) {
             for (MultipartFile image : images) {
-                if (image == null || image.isEmpty()) continue;
+                if (image == null || image.isEmpty()) {
+                    System.out.println("❌ File rỗng hoặc không tồn tại");
+                    continue;
+                }
 
                 String originalFileName = image.getOriginalFilename();
-                if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
-                    continue; // bỏ qua file không hợp lệ
+                System.out.println("📂 Nhận file: " + originalFileName);
+
+                // Kiểm tra file hợp lệ (không phân biệt hoa/thường)
+                if (originalFileName == null ||
+                        !originalFileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$")) {
+                    System.out.println("⚠ Bỏ qua file không hợp lệ: " + originalFileName);
+                    continue;
                 }
 
                 // Tạo thư mục nếu chưa có
                 Path uploadPath = Paths.get(uploadDir);
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
+                    System.out.println("📁 Đã tạo thư mục upload: " + uploadPath);
                 }
 
                 // Tạo tên mới và lưu file
@@ -114,19 +123,18 @@ public class RatingService {
                 image.transferTo(filePath);
 
                 imageNames.add(newFileName);
+                System.out.println("✅ Đã lưu file: " + newFileName);
             }
+        } else {
+            System.out.println("⚠ Không nhận được ảnh nào từ request");
         }
 
-        // Gán chuỗi ảnh nếu có, nếu không thì để chuỗi rỗng hoặc null
-        if (!imageNames.isEmpty()) {
-            rating.setImages(String.join(",", imageNames));
-        } else {
-            rating.setImages(null); // hoặc "" nếu cột DB không cho null
-        }
+        // Gán chuỗi ảnh nếu có
+        rating.setImages(imageNames.isEmpty() ? null : String.join(",", imageNames));
 
         ratingRepository.save(rating);
+        System.out.println("💾 Đã lưu rating thành công");
     }
-
 
 
 

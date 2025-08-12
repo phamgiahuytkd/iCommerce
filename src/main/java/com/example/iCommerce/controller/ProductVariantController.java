@@ -26,11 +26,28 @@ import java.util.List;
 public class ProductVariantController {
     ProductVariantService productVariantService;
 
-    @GetMapping("/{id}")
-    ApiResponse<List<ProductVariantResponse>> getProduct(@PathVariable("id") String id){
+    @GetMapping
+    ApiResponse<List<ProductVariantResponse>> getProductVariants(){
 
         return ApiResponse.<List<ProductVariantResponse>>builder()
-                .result(productVariantService.getProductVariants(id))
+                .result(productVariantService.getProductVariants())
+                .build();
+    }
+
+
+    @GetMapping("/{id}")
+    ApiResponse<List<ProductVariantResponse>> getProductVariantsPerProduct(@PathVariable("id") String id){
+
+        return ApiResponse.<List<ProductVariantResponse>>builder()
+                .result(productVariantService.getProductVariantsPerProduct(id))
+                .build();
+    }
+
+    @GetMapping("/{id}/admin")
+    ApiResponse<List<ProductVariantResponse>> getProductVariantsPerProductAdmin(@PathVariable("id") String id){
+
+        return ApiResponse.<List<ProductVariantResponse>>builder()
+                .result(productVariantService.getProductVariantsPerProductAdmin(id))
                 .build();
     }
 
@@ -39,6 +56,22 @@ public class ProductVariantController {
 
         return ApiResponse.<PriceRangeResponse>builder()
                 .result(productVariantService.getPriceRange())
+                .build();
+    }
+
+    @PutMapping("/{id}/stop")
+    ApiResponse<String> updateStopProductVariant(@PathVariable("id") String id){
+        productVariantService.updateStopProductVariant(id);
+        return ApiResponse.<String>builder()
+                .result("Đã dừng bán sản phẩm")
+                .build();
+    }
+
+    @PutMapping("/{id}/continue")
+    ApiResponse<String> updateContinueProductVariant(@PathVariable("id") String id){
+        productVariantService.updateContinueProductVariant(id);
+        return ApiResponse.<String>builder()
+                .result("Đã mở bán sản phẩm")
                 .build();
     }
 

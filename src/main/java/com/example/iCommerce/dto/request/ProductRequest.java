@@ -18,6 +18,7 @@ public class ProductRequest {
     String category_id;
     String brand_id;
     MultipartFile image;
+    String existingImage;
     String description;
     String ingredient;
     String instruction;

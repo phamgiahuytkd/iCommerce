@@ -1,6 +1,7 @@
 package com.example.iCommerce.mapper;
 
 import com.example.iCommerce.dto.request.ProductRequest;
+import com.example.iCommerce.dto.response.ProductAdminResponse;
 import com.example.iCommerce.dto.response.ProductResponse;
 import com.example.iCommerce.entity.Product;
 import org.mapstruct.*;
@@ -64,4 +65,25 @@ public interface ProductMapper {
     default List<ProductResponse> toResponses(Page<Object[]> rows) {
         return rows.stream().map(this::toResponse).toList();
     }
+
+
+
+    /// admin ///
+    default ProductAdminResponse toAdminResponse(Object[] row) {
+        return ProductAdminResponse.builder()
+                .id((String) row[0])
+                .name((String) row[1])
+                .brand((String) row[2])
+                .category((String) row[3])
+                .image((String) row[4])
+                .description((String) row[5])
+                .instruction((String) row[6])
+                .ingredient((String) row[7])
+                .star(row[8] != null ? ((Number) row[8]).doubleValue() : 0.0)
+                .sold(row[9] != null ? ((Number) row[9]).longValue() : 0L)
+                .comment(row[10] != null ? ((Number) row[10]).longValue() : 0L)
+                .view(row[11] != null ? ((Number) row[11]).longValue() : 0L)
+                .build();
+    }
+
 }
