@@ -20,4 +20,6 @@ public class UserResponse {
     LocalDate date_of_birth;
     String avatar;
     LocalDateTime create_day;
+    Integer reputation;
+    LocalDateTime stop_day;
 }

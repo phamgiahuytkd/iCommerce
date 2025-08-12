@@ -157,10 +157,7 @@ public class OrderService {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<OrderResponse> getOrders(){
-        return orderRepository.findAll().stream().map(orderMapper::toOrderResponse).toList();
-    }
+
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public OrderResponse getOrder(String id) {
@@ -202,6 +199,17 @@ public class OrderService {
         Pageable pageable = PageRequest.of(0, 100);
 
         Page<Object[]> page = orderRepository.findOrdersByUserAndStatus(id, status, pageable);
+        return orderMapper.toResponses(page);
+    }
+
+
+    /// admin ///
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<OrderResponse> getOrders(String status){
+
+        Pageable pageable = PageRequest.of(0, 100);
+
+        Page<Object[]> page = orderRepository.findAllOrdersByStatus(status, pageable);
         return orderMapper.toResponses(page);
     }
 

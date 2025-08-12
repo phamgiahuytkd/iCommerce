@@ -229,6 +229,7 @@ public AuthenticationResponse authenticateSocialLogin(SocialLoginRequest request
         newUser.setUser_type("USER");
         newUser.setAvatar(request.getAvatar());
         newUser.setDate_of_birth(request.getDay_of_birth());
+        newUser.setReputation(100);
         user = userRepository.save(newUser);
         System.out.println("Saved user: " + user.getAccount_type());
     }

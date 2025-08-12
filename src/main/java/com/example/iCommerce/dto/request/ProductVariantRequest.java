@@ -15,11 +15,14 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductVariantRequest {
+    String id;
     Long price;
     Long stock;
     LocalDateTime stop_day;
     List<String> attributes;
     DiscountRequest discount;
     MultipartFile image;
+    String existingImage;
     List<MultipartFile> images;
+    List<String> existingImages;
 }

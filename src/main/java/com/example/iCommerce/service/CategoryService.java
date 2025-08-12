@@ -34,7 +34,7 @@ public class CategoryService {
 
 
     public List<CategoryResponse> getCategories(){
-        return categoryRepository.findAll().stream().map(categoryMapper::toCategoryResponse).toList();
+        return categoryRepository.findAllWithProductCount();
     }
 
     public CategoryResponse getCategory(String id){

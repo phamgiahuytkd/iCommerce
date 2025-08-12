@@ -85,7 +85,7 @@ public class OrderStatusService {
     }
 
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public List<OrderStatusResponse> getUserOrderStatus(String orderId){
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();

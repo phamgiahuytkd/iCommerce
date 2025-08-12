@@ -15,7 +15,7 @@ public class CartResponse {
     String product_variant_id;
     String product_id;
     String name;
-    List<AttributeValueResponse> attribute_values;
+    List<ProductVariantAttributeValueResponse> attribute_values;
     Long price;
     String image;
     Long quantity;

@@ -18,7 +18,9 @@ public enum ErrorCode {
     NO_ADDRESS(1007, "Vui lòng thêm địa chỉ giao hàng", HttpStatus.BAD_REQUEST),
     NO_PHONE_NUMBER(1008, "Vui lòng thêm số điện thoại giao hàng", HttpStatus.BAD_REQUEST),
     MAX_SIZE_FILE(1009, "Kích thuớc tệp quá giới hạn", HttpStatus.BAD_REQUEST),
-    INVALID_DATE_OF_BIRTH(10011, "Ngày sinh không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_OF_BIRTH(10011, "Ngày sinh không hợp lệ.", HttpStatus.BAD_REQUEST),
+    INVALID_STOCK(10012, "Số lượng kho không hợp lệ.", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_RANGE(10013, "Khoảng thời gian không hợp lệ.", HttpStatus.BAD_REQUEST),
 
 
 
@@ -29,6 +31,7 @@ public enum ErrorCode {
     CATEGORY_NOT_EXISTED(3003, "Danh mục không tồn tại", HttpStatus.BAD_REQUEST),
     BRAND_NOT_EXISTED(3004, "Danh mục không tồn tại", HttpStatus.BAD_REQUEST),
     CAN_NOT_DELETE_PRODUCT(3005, "Không thể xóa sản phẩm", HttpStatus.BAD_REQUEST),
+    GIFT_ALREADY_EXISTS(3007, "Quà tặng đã tồn tại", HttpStatus.BAD_REQUEST),
     GIFT_NOT_EXISTED(3006, "Quà không tồn tại", HttpStatus.BAD_REQUEST),
     ATTRIBUTE_EXISTED(3021, "Thuộc tính đã tồn tại", HttpStatus.BAD_REQUEST),
     ATTRIBUTE_NOT_EXISTED(3022, "Thuộc tính không tồn tại", HttpStatus.BAD_REQUEST),

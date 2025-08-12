@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GiftRequest {
-    String product_id;
+    String product_variant_ids;
+    String product_variant_id;
     Long stock;
     LocalDateTime start_day;
     LocalDateTime end_day;

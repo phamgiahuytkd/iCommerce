@@ -6,6 +6,7 @@ import com.example.iCommerce.dto.request.ProductRequest;
 import com.example.iCommerce.dto.request.SearchProductRequest;
 import com.example.iCommerce.dto.response.ApiResponse;
 import com.example.iCommerce.dto.response.PriceRangeResponse;
+import com.example.iCommerce.dto.response.ProductAdminResponse;
 import com.example.iCommerce.dto.response.ProductResponse;
 import com.example.iCommerce.service.ProductService;
 import lombok.AccessLevel;
@@ -42,9 +43,9 @@ public class ProductController {
 
 
 
-    @PutMapping("/{id}")
-    ApiResponse<String> updateProduct(@PathVariable("id") String id, @ModelAttribute ProductRequest request, @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
-        productService.updateProduct(id, request, image);
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ApiResponse<String> updateProduct(@PathVariable("id") String id, @ModelAttribute ProductRequest request) throws IOException {
+        productService.updateProduct(id, request);
         return ApiResponse.<String>builder()
                 .result("Cập nhật thành công")
                 .build();
@@ -152,6 +153,15 @@ public class ProductController {
     }
 
 
+
+    /// admin ///
+    @GetMapping("/{id}/admin")
+    ApiResponse<ProductAdminResponse> getProductAdmin(@PathVariable("id") String id){
+
+        return ApiResponse.<ProductAdminResponse>builder()
+                .result(productService.getProductAdmin(id))
+                .build();
+    }
 
 
 

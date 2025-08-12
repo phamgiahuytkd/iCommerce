@@ -46,6 +46,10 @@ public class AddressService {
         address.setUser(user);
         addressRepository.save(address);
 
+        if(user.getDefault_shipping_address() == null) {
+            user.setDefault_shipping_address(address);
+            userRepository.save(user);
+        }
 
     }
 

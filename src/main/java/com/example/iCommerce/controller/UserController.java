@@ -2,6 +2,7 @@ package com.example.iCommerce.controller;
 
 import com.example.iCommerce.dto.request.UserRequest;
 import com.example.iCommerce.dto.response.ApiResponse;
+import com.example.iCommerce.dto.response.UserAdminResponse;
 import com.example.iCommerce.dto.response.UserLoggedResponse;
 import com.example.iCommerce.dto.response.UserResponse;
 import com.example.iCommerce.service.UserService;
@@ -78,14 +79,22 @@ public class UserController {
 
 
     @GetMapping
-    ApiResponse<List<UserResponse>> getUsers(){
+    ApiResponse<List<UserAdminResponse>> getUsers(){
 
-        return ApiResponse.<List<UserResponse>>builder()
+        return ApiResponse.<List<UserAdminResponse>>builder()
                 .result(userService.getUsers())
                 .build();
     }
 
+/// //////ADMIN////// ///
 
+    @PutMapping("/{id}/block")
+    ApiResponse<String> blockUser(@PathVariable("id") String id){
+        userService.blockUser(id);
+        return ApiResponse.<String>builder()
+                .result("Đã khóa tài khoản.")
+                .build();
 
+    }
 
 }

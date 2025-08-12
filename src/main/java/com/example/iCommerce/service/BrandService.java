@@ -38,7 +38,7 @@ public class BrandService {
 
 
     public List<BrandResponse> getBrands(){
-        return brandRepository.findAll().stream().map(brandMapper::toBrandResponse).toList();
+        return brandRepository.findAllWithProductCount();
     }
 
     public BrandResponse getBrand(String id){
