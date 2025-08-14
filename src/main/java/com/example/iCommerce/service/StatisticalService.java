@@ -30,9 +30,9 @@ public class StatisticalService {
         Object[] data = raw.get(0);
         return OverviewResponse.builder()
                 .total_orders(((Number) data[0]).longValue())
-                .total_revenue(((Number) data[1]).longValue())
-                .average_order(((Number) data[2]).doubleValue())
-                .total_sold_products(((Number) data[3]).longValue())
+                .total_revenue(data[1] != null ? ((Number) data[1]).longValue() : 0L)
+                .average_order(data[2] != null ? ((Number) data[2]).doubleValue() : 0.0)
+                .total_sold_products(data[3] != null ? ((Number) data[3]).longValue() : 0L)
                 .build();
     }
 

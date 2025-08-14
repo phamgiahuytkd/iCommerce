@@ -11,9 +11,9 @@ spring:
       max-request-size: 1000MB
 
   datasource:
-    url: jdbc:mysql://localhost:3306/cosmetic
-    username: root
-    password: root
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:cosmetic}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
     hikari:
       maximum-pool-size: 100
       minimum-idle: 100
@@ -23,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update # Khi production có thể đổi thành validate
     show-sql: true
     properties:
       hibernate:
@@ -39,7 +39,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: pghuy2101320@student.ctuet.edu.vn
-    password: sogmayxdddclcqpf   # Không có dấu ngoặc kép và khoảng trắng
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -48,7 +48,6 @@ spring:
             enable: true
           ssl:
             trust: smtp.gmail.com
-
 
 jwt:
   signerKey: "AHbWXn6k9g06iFIaGiCfgCw4QzfQO/AdcNC30hBhLxmhwUyf6bE+7o2UMUrp06K4"
@@ -62,9 +61,16 @@ logging:
 
 momo:
   partner-code: MOMO
-  return-url: http://localhost:3000/momo-return
+  return-url: https://ad-cosmetic.vercel.app/momo-return
   end-point: https://test-payment.momo.vn/v2/gateway/api/create
-  ipn-url: http://localhost:8080/iCommerce/api/momo/ipn-handler
+  ipn-url: https://<backend-domain>/iCommerce/api/momo/ipn-handler
   access-key: F8BBA842ECF85
   secret-key: K951B6PE1waDMi640xX08PD3vg6EkVlz
   request-type: captureWallet
+
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://localhost:3001
+    - https://ad-cosmetic.vercel.app
+    - https://cosmetic-sigma.vercel.app
