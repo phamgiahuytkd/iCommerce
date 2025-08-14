@@ -11,9 +11,9 @@ spring:
       max-request-size: 1000MB
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:cosmetic}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: 100
       minimum-idle: 100
@@ -23,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # Khi production có thể đổi thành validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -50,7 +50,7 @@ spring:
             trust: smtp.gmail.com
 
 jwt:
-  signerKey: "AHbWXn6k9g06iFIaGiCfgCw4QzfQO/AdcNC30hBhLxmhwUyf6bE+7o2UMUrp06K4"
+  signerKey: ${JWT_SIGNER_KEY}
   valid-duration: 3600
   refreshable-duration: 36000
 
@@ -60,12 +60,12 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 momo:
-  partner-code: MOMO
-  return-url: https://ad-cosmetic.vercel.app/momo-return
-  end-point: https://test-payment.momo.vn/v2/gateway/api/create
-  ipn-url: https://<backend-domain>/iCommerce/api/momo/ipn-handler
-  access-key: F8BBA842ECF85
-  secret-key: K951B6PE1waDMi640xX08PD3vg6EkVlz
+  partner-code: ${MOMO_PARTNER_CODE}
+  return-url: ${MOMO_RETURN_URL}
+  end-point: ${MOMO_END_POINT}
+  ipn-url: ${MOMO_IPN_URL}
+  access-key: ${MOMO_ACCESS_KEY}
+  secret-key: ${MOMO_SECRET_KEY}
   request-type: captureWallet
 
 cors:
