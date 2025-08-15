@@ -35,6 +35,7 @@ public class BrandService {
     BrandRepository brandRepository;
     BrandMapper brandMapper;
     String uploadDir = "uploads/";
+    CloudinaryService cloudinaryService;
 
 
     public List<BrandResponse> getBrands(){
@@ -47,72 +48,54 @@ public class BrandService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void updateBrand(String id, String name, MultipartFile image) throws IOException {
-
-        Brand brand = brandRepository.findById(id).orElseThrow(
-                () -> new AppException(ErrorCode.BRAND_NOT_EXISTED)
-        );
-
-        // Xử lý ảnh
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+    public void createBrand(String name, MultipartFile image) throws IOException {
+        // Kiểm tra ảnh hợp lệ
+        if (image == null || image.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_IMAGE);
         }
 
+        String originalFileName = image.getOriginalFilename();
+        if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
+            throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
+        }
+
+        // Upload ảnh lên Cloudinary
+        String imageUrl = cloudinaryService.upload(image);
+
+        // Lưu brand vào database
+        brandRepository.save(Brand.builder()
+                .name(name)
+                .image(imageUrl) // lưu URL Cloudinary thay vì filename
+                .build());
+    }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateBrand(String id, String name, MultipartFile image) throws IOException {
+        Brand brand = brandRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_EXISTED));
+
+        // Cập nhật tên
+        if (name != null && !name.isEmpty()) {
+            brand.setName(name);
+        }
+
+        // Upload ảnh mới nếu có
         if (image != null && !image.isEmpty()) {
             String originalFileName = image.getOriginalFilename();
             if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
                 throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
             }
 
-            String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            String newFileName = UUID.randomUUID().toString() + extension;
-            Path filePath = uploadPath.resolve(newFileName);
-            image.transferTo(filePath);
-
-            // Xóa ảnh cũ nếu tồn tại
-            if (Objects.nonNull(brand.getImage()) && !brand.getImage().isEmpty()) {
-                Path oldImagePath = Paths.get(uploadDir, brand.getImage());
-                Files.deleteIfExists(oldImagePath);
-            }
-
-            brand.setImage(newFileName);
+            // Upload lên Cloudinary
+            String imageUrl = cloudinaryService.upload(image);
+            brand.setImage(imageUrl);
         }
 
-
-        brand.setName(name);
         brandRepository.save(brand);
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public void createBrand(String name, MultipartFile image) throws IOException {
-
-        // Kiểm tra ảnh hợp lệ
-        if (image == null || image.isEmpty()) {
-            throw new AppException(ErrorCode.INVALID_IMAGE);
-        }
-        String originalFileName = image.getOriginalFilename();
-        if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
-            throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
-        }
-
-        // Lưu ảnh vào thư mục uploads
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String newFileName = UUID.randomUUID().toString() + extension;
-        Path filePath = uploadPath.resolve(newFileName);
-        image.transferTo(filePath);
-
-        brandRepository.save(Brand.builder()
-                .name(name)
-                .image(newFileName)
-                .build());
-
-    }
 
 
 

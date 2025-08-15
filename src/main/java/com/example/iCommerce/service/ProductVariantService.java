@@ -43,8 +43,6 @@ public class ProductVariantService {
     ProductVariantRepository productVariantRepository;
     ProductVariantMapper productVariantMapper;
 
-    String uploadDir = "uploads/";
-
     @PreAuthorize("hasRole('ADMIN')")
     public List<ProductVariantResponse> getProductVariants(){
         List<Object[]> raw = productVariantRepository.findProductVariants();

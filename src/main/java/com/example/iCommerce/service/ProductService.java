@@ -44,6 +44,7 @@ public class ProductService {
     LoveProductRepository loveProductRepository;
     UserRepository userRepository;
     AttributeValueRepository attributeValueRepository;
+    CloudinaryService cloudinaryService;
 
     String uploadDir = "uploads/";
     private String saveImage(MultipartFile image) throws IOException {
@@ -69,8 +70,8 @@ public class ProductService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public void createProduct(ProductRequest request) throws IOException {
-        // === 1. Lưu ảnh sản phẩm chính ===
-        String productImageFileName = saveImage(request.getImage());
+        // === 1. Upload ảnh sản phẩm chính lên Cloudinary ===
+        String productImageUrl = cloudinaryService.upload(request.getImage());
 
         // === 2. Lấy Category và Brand ===
         Category category = categoryRepository.findById(request.getCategory_id())
@@ -80,7 +81,7 @@ public class ProductService {
 
         // === 3. Tạo đối tượng Product ===
         Product product = productMapper.toProduct(request);
-        product.setImage(productImageFileName);
+        product.setImage(productImageUrl);
         product.setCategory(category);
         product.setBrand(brand);
         product.setView(0L);
@@ -88,12 +89,15 @@ public class ProductService {
 
         // === 4. Duyệt qua từng ProductVariantRequest ===
         for (ProductVariantRequest variantRequest : request.getVariants()) {
-            String variantThumbFileName = saveImage(variantRequest.getImage());
-            List<String> variantImagesFileNames = new ArrayList<>();
+            // Upload ảnh thumbnail của variant
+            String variantThumbUrl = cloudinaryService.upload(variantRequest.getImage());
+
+            // Upload gallery ảnh của variant (nếu có)
+            List<String> variantImagesUrls = new ArrayList<>();
             if (variantRequest.getImages() != null) {
                 for (MultipartFile image : variantRequest.getImages()) {
-                    String fileName = saveImage(image);
-                    if (fileName != null) variantImagesFileNames.add(fileName);
+                    String fileUrl = cloudinaryService.upload(image);
+                    if (fileUrl != null) variantImagesUrls.add(fileUrl);
                 }
             }
 
@@ -102,14 +106,14 @@ public class ProductService {
                     .stock(variantRequest.getStock())
                     .stop_day(variantRequest.getStop_day())
                     .create_day(LocalDateTime.now())
-                    .image(variantThumbFileName)
-                    .images(String.join(",", variantImagesFileNames))
+                    .image(variantThumbUrl)
+                    .images(String.join(",", variantImagesUrls))
                     .product(product)
                     .variantAttributes(new ArrayList<>())
                     .discounts(new ArrayList<>())
                     .build();
 
-            // === 5. Thuộc tính ===
+            // === 5. Thuộc tính variant ===
             if (variantRequest.getAttributes() != null) {
                 for (String attributeValueId : variantRequest.getAttributes()) {
                     AttributeValue value = attributeValueRepository.findById(attributeValueId)
@@ -123,7 +127,7 @@ public class ProductService {
                 }
             }
 
-            // === 6. Discount ===
+            // === 6. Discount variant ===
             if (variantRequest.getDiscount() != null) {
                 DiscountRequest d = variantRequest.getDiscount();
                 variant.getDiscounts().add(
@@ -139,7 +143,7 @@ public class ProductService {
             product.getProductVariants().add(variant);
         }
 
-        // === 7. Lưu Product ===
+        // === 7. Lưu Product vào database ===
         productRepository.save(product);
     }
 
@@ -147,162 +151,98 @@ public class ProductService {
     @PreAuthorize("hasRole('ADMIN')")
     public void updateProduct(String id, ProductRequest request) throws IOException {
         // Tìm Product
-        Product product = productRepository.findById(id).orElseThrow(
-                () -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED)
-        );
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
 
         // Cập nhật Category
         if (Objects.nonNull(request.getCategory_id()) && !request.getCategory_id().isEmpty()) {
-            Category category = categoryRepository.findById(request.getCategory_id()).orElseThrow(
-                    () -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED)
-            );
+            Category category = categoryRepository.findById(request.getCategory_id())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED));
             product.setCategory(category);
         }
 
         // Cập nhật Brand
         if (Objects.nonNull(request.getBrand_id()) && !request.getBrand_id().isEmpty()) {
-            Brand brand = brandRepository.findById(request.getBrand_id()).orElseThrow(
-                    () -> new AppException(ErrorCode.BRAND_NOT_EXISTED)
-            );
+            Brand brand = brandRepository.findById(request.getBrand_id())
+                    .orElseThrow(() -> new AppException(ErrorCode.BRAND_NOT_EXISTED));
             product.setBrand(brand);
         }
 
-        // Cập nhật Name
-        if (Objects.nonNull(request.getName()) && !request.getName().isEmpty()) {
-            product.setName(request.getName());
-        }
+        // Cập nhật thông tin cơ bản
+        if (Objects.nonNull(request.getName()) && !request.getName().isEmpty()) product.setName(request.getName());
+        if (Objects.nonNull(request.getDescription()) && !request.getDescription().isEmpty()) product.setDescription(request.getDescription());
+        if (Objects.nonNull(request.getIngredient()) && !request.getIngredient().isEmpty()) product.setIngredient(request.getIngredient());
+        if (Objects.nonNull(request.getInstruction()) && !request.getInstruction().isEmpty()) product.setInstruction(request.getInstruction());
 
-        if (Objects.nonNull(request.getDescription()) && !request.getDescription().isEmpty()) {
-            product.setDescription(request.getDescription());
-        }
-
-        if (Objects.nonNull(request.getIngredient()) && !request.getIngredient().isEmpty()) {
-            product.setIngredient(request.getIngredient());
-        }
-
-        if (Objects.nonNull(request.getInstruction()) && !request.getInstruction().isEmpty()) {
-            product.setInstruction(request.getInstruction());
-        }
-
-        // Xử lý ảnh
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
+        // === Ảnh main product ===
         if (request.getImage() != null && !request.getImage().isEmpty()) {
-            String originalFileName = request.getImage().getOriginalFilename();
-            if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
-                throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
-            }
-
-            String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            String newFileName = UUID.randomUUID().toString() + extension;
-            Path filePath = uploadPath.resolve(newFileName);
-            request.getImage().transferTo(filePath);
-
-            // Xóa ảnh cũ nếu tồn tại
-            if (Objects.nonNull(product.getImage()) && !product.getImage().isEmpty()) {
-                Path oldImagePath = Paths.get(uploadDir, product.getImage());
-                Files.deleteIfExists(oldImagePath);
-            }
-
-            product.setImage(newFileName);
+            String productImageUrl = cloudinaryService.upload(request.getImage());
+            product.setImage(productImageUrl);
         }
 
-
+        // === Variant ===
         for (ProductVariantRequest variantRequest : request.getVariants()) {
             ProductVariant variant;
-            if (variantRequest.getId() != null && !variantRequest.getId().isEmpty() && !(variantRequest.getId() == "")) {
+
+            // Nếu là variant cũ
+            if (variantRequest.getId() != null && !variantRequest.getId().isEmpty()) {
                 variant = product.getProductVariants().stream()
                         .filter(v -> v.getId().equals(variantRequest.getId()))
                         .findFirst()
                         .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
-            } else {
+            } else { // variant mới
                 variant = new ProductVariant();
-                product.getProductVariants().add(variant);
                 variant.setId(UUID.randomUUID().toString());
                 variant.setVariantAttributes(new ArrayList<>());
+                variant.setDiscounts(new ArrayList<>());
+                variant.setProduct(product);
+                product.getProductVariants().add(variant);
             }
 
-            variant.setProduct(product);
+            // Cập nhật giá, stock
             variant.setPrice(variantRequest.getPrice());
             variant.setStock(variantRequest.getStock());
+            variant.setStop_day(variantRequest.getStop_day());
 
+            // Cập nhật thuộc tính variant
             if (variantRequest.getAttributes() != null) {
                 variant.getVariantAttributes().clear();
-
-
-
                 for (String attributeValueId : variantRequest.getAttributes()) {
                     AttributeValue value = attributeValueRepository.findById(attributeValueId)
                             .orElseThrow(() -> new AppException(ErrorCode.ATTRIBUTE_VALUE_NOT_EXISTED));
-
-                    VariantAttribute variantAttribute = VariantAttribute.builder()
-                            .productVariant(variant)
-                            .attributeValue(value)
-                            .build();
-
-                    variant.getVariantAttributes().add(variantAttribute);
+                    variant.getVariantAttributes().add(
+                            VariantAttribute.builder()
+                                    .productVariant(variant)
+                                    .attributeValue(value)
+                                    .build()
+                    );
                 }
             }
 
-
+            // Upload ảnh thumbnail variant
             if (variantRequest.getImage() != null && !variantRequest.getImage().isEmpty()) {
-                String originalFileName = variantRequest.getImage().getOriginalFilename();
-                if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
-                    throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
-                }
-
-                String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-                String newFileName = UUID.randomUUID().toString() + extension;
-                Path filePath = uploadPath.resolve(newFileName);
-                variantRequest.getImage().transferTo(filePath);
-
-                // Xóa ảnh cũ nếu tồn tại
-                if (Objects.nonNull(variant.getImage()) && !variant.getImage().isEmpty()) {
-                    Path oldImagePath = Paths.get(uploadDir, variant.getImage());
-                    Files.deleteIfExists(oldImagePath);
-                }
-
-                variant.setImage(newFileName);
+                String variantThumbUrl = cloudinaryService.upload(variantRequest.getImage());
+                variant.setImage(variantThumbUrl);
             }
 
-            // XỬ lý multiple ảnh
-            variantRequest.getExistingImages();
-            variant.getImages();
-
-            List<String> keptImageNames = variantRequest.getExistingImages() != null
-                    ? variantRequest.getExistingImages()
+            // Upload gallery images variant
+            List<String> keptImages = variantRequest.getExistingImages() != null
+                    ? new ArrayList<>(variantRequest.getExistingImages())
                     : new ArrayList<>();
-
-            List<String> oldImageNames = variant.getImages() != null && !variant.getImages().isBlank()
-                    ? Arrays.asList(variant.getImages().split(","))
-                    : new ArrayList<>();
-
-            List<String> imagesToDelete = oldImageNames.stream()
-                    .filter(img -> !keptImageNames.contains(img))
-                    .collect(Collectors.toList());
-
-            for (String imageName : imagesToDelete) {
-                Path oldImagePath = Paths.get(uploadDir, imageName);
-                Files.deleteIfExists(oldImagePath);
-            }
-
 
             if (variantRequest.getImages() != null) {
                 for (MultipartFile image : variantRequest.getImages()) {
-                    String fileName = saveImage(image);
-                    if (fileName != null) keptImageNames.add(fileName);
+                    String url = cloudinaryService.upload(image);
+                    keptImages.add(url);
                 }
             }
 
-            variant.setImages(String.join(",", keptImageNames));
+            variant.setImages(String.join(",", keptImages));
 
-
-            // === 6. Discount ===
+            // Cập nhật discount
             if (variantRequest.getDiscount() != null) {
                 DiscountRequest d = variantRequest.getDiscount();
+                variant.getDiscounts().clear();
                 variant.getDiscounts().add(
                         Discount.builder()
                                 .productVariant(variant)
@@ -312,12 +252,10 @@ public class ProductService {
                                 .build()
                 );
             }
-
         }
 
-        // Lưu Product
+        // Lưu product
         productRepository.save(product);
-
     }
 
 

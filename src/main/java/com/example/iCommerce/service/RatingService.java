@@ -37,13 +37,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RatingService {
-    String uploadDir = "uploads/";
 
     RatingRepository ratingRepository;
     RatingMapper ratingMapper;
     UserRepository userRepository;
     ProductVariantRepository productVariantRepository;
     OrderRepository orderRepository;
+    CloudinaryService cloudinaryService;
 
 
     public List<StarCountResponse> getStarCountsForProduct(String productId) {
@@ -72,7 +72,6 @@ public class RatingService {
 
     @PreAuthorize("hasRole('USER')")
     public void createRating(RatingRequest request, List<MultipartFile> images) throws IOException {
-
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -89,51 +88,24 @@ public class RatingService {
         rating.setProductVariant(productVariant);
         rating.setCreate_day(LocalDateTime.now());
 
-        List<String> imageNames = new ArrayList<>();
+        List<String> imageUrls = new ArrayList<>();
 
-        // Chỉ xử lý nếu có ảnh
         if (images != null && !images.isEmpty()) {
             for (MultipartFile image : images) {
-                if (image == null || image.isEmpty()) {
-                    System.out.println("❌ File rỗng hoặc không tồn tại");
-                    continue;
-                }
+                if (image == null || image.isEmpty()) continue;
 
                 String originalFileName = image.getOriginalFilename();
-                System.out.println("📂 Nhận file: " + originalFileName);
-
-                // Kiểm tra file hợp lệ (không phân biệt hoa/thường)
                 if (originalFileName == null ||
-                        !originalFileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$")) {
-                    System.out.println("⚠ Bỏ qua file không hợp lệ: " + originalFileName);
-                    continue;
-                }
+                        !originalFileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$")) continue;
 
-                // Tạo thư mục nếu chưa có
-                Path uploadPath = Paths.get(uploadDir);
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                    System.out.println("📁 Đã tạo thư mục upload: " + uploadPath);
-                }
-
-                // Tạo tên mới và lưu file
-                String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-                String newFileName = UUID.randomUUID().toString() + extension;
-                Path filePath = uploadPath.resolve(newFileName);
-                image.transferTo(filePath);
-
-                imageNames.add(newFileName);
-                System.out.println("✅ Đã lưu file: " + newFileName);
+                // Upload lên Cloudinary
+                String imageUrl = cloudinaryService.upload(image);
+                imageUrls.add(imageUrl);
             }
-        } else {
-            System.out.println("⚠ Không nhận được ảnh nào từ request");
         }
 
-        // Gán chuỗi ảnh nếu có
-        rating.setImages(imageNames.isEmpty() ? null : String.join(",", imageNames));
-
+        rating.setImages(imageUrls.isEmpty() ? null : String.join(",", imageUrls));
         ratingRepository.save(rating);
-        System.out.println("💾 Đã lưu rating thành công");
     }
 
 

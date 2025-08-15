@@ -31,7 +31,7 @@ public class CategoryService {
     CategoryRepository categoryRepository;
     CategoryMapper categoryMapper;
     String uploadDir = "uploads/";
-
+    CloudinaryService cloudinaryService;
 
     public List<CategoryResponse> getCategories(){
         return categoryRepository.findAllWithProductCount();
@@ -43,74 +43,54 @@ public class CategoryService {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public void createCategory(String name, MultipartFile image) throws IOException {
+        // Kiểm tra ảnh hợp lệ
+        if (image == null || image.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_IMAGE);
+        }
+
+        String originalFileName = image.getOriginalFilename();
+        if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
+            throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
+        }
+
+        // Upload ảnh lên Cloudinary
+        String imageUrl = cloudinaryService.upload(image);
+
+        // Lưu category vào database
+        categoryRepository.save(Category.builder()
+                .name(name)
+                .image(imageUrl) // lưu URL Cloudinary
+                .build());
+    }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     public void updateCategory(String id, String name, MultipartFile image) throws IOException {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED));
 
-        Category category = categoryRepository.findById(id).orElseThrow(
-                () -> new AppException(ErrorCode.BRAND_NOT_EXISTED)
-        );
-
-        // Xử lý ảnh
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+        // Cập nhật tên
+        if (name != null && !name.isEmpty()) {
+            category.setName(name);
         }
 
+        // Upload ảnh mới nếu có
         if (image != null && !image.isEmpty()) {
             String originalFileName = image.getOriginalFilename();
             if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
                 throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
             }
 
-            String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            String newFileName = UUID.randomUUID().toString() + extension;
-            Path filePath = uploadPath.resolve(newFileName);
-            image.transferTo(filePath);
-
-            // Xóa ảnh cũ nếu tồn tại
-            if (Objects.nonNull(category.getImage()) && !category.getImage().isEmpty()) {
-                Path oldImagePath = Paths.get(uploadDir, category.getImage());
-                Files.deleteIfExists(oldImagePath);
-            }
-
-            category.setImage(newFileName);
+            // Upload lên Cloudinary
+            String imageUrl = cloudinaryService.upload(image);
+            category.setImage(imageUrl);
         }
 
-
-        category.setName(name);
         categoryRepository.save(category);
     }
 
-
-    @PreAuthorize("hasRole('ADMIN')")
-    public void createCategory(String name, MultipartFile image) throws IOException {
-
-        // Kiểm tra ảnh hợp lệ
-        if (image == null || image.isEmpty()) {
-            throw new AppException(ErrorCode.INVALID_IMAGE);
-        }
-        String originalFileName = image.getOriginalFilename();
-        if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
-            throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
-        }
-
-        // Lưu ảnh vào thư mục uploads
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        String newFileName = UUID.randomUUID().toString() + extension;
-        Path filePath = uploadPath.resolve(newFileName);
-        image.transferTo(filePath);
-
-        categoryRepository.save(Category.builder()
-                .name(name)
-                .image(newFileName)
-                .build());
-
-    }
 
 
 
