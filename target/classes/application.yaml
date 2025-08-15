@@ -1,0 +1,76 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /iCommerce
+
+spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 1000MB
+      max-request-size: 1000MB
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 100
+      idle-timeout: 300000000
+      max-lifetime: 1800000000
+      connection-timeout: 200000000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        flushMode: COMMIT
+
+  web:
+    resources:
+      static-locations: classpath:/static/,file:./uploads/
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: pghuy2101320@student.ctuet.edu.vn
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtp.gmail.com
+
+jwt:
+  signerKey: ${JWT_SIGNER_KEY}
+  valid-duration: 3600
+  refreshable-duration: 36000
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+momo:
+  partner-code: ${MOMO_PARTNER_CODE}
+  return-url: ${MOMO_RETURN_URL}
+  end-point: ${MOMO_END_POINT}
+  ipn-url: ${MOMO_IPN_URL}
+  access-key: ${MOMO_ACCESS_KEY}
+  secret-key: ${MOMO_SECRET_KEY}
+  request-type: captureWallet
+
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://localhost:3001
+    - https://ad-cosmetic.vercel.app
+    - https://cosmetic-sigma.vercel.app
