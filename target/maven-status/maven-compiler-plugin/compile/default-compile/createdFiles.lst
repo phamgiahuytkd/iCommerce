@@ -188,6 +188,7 @@ com\example\iCommerce\entity\Attribute$AttributeBuilder.class
 com\example\iCommerce\mapper\RatingMapperImpl.class
 com\example\iCommerce\repository\UserRepository.class
 com\example\iCommerce\entity\RatingId.class
+com\example\iCommerce\service\CloudinaryService.class
 com\example\iCommerce\dto\response\OrderStatusResponse.class
 com\example\iCommerce\repository\CategoryRepository.class
 com\example\iCommerce\mapper\GiftMapperImpl.class

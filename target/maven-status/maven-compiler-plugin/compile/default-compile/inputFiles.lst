@@ -110,6 +110,7 @@ E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\entity\Produc
 E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\dto\request\CartRequest.java
 E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\controller\StatisticalController.java
 E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\dto\request\LogoutRequest.java
+E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\service\CloudinaryService.java
 E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\service\RatingService.java
 E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\ICommerceApplication.java
 E:\Project 3\NCKK\BE\iCommerce\src\main\java\com\example\iCommerce\dto\response\OrderStatusResponse.java
