@@ -11,9 +11,9 @@ spring:
       max-request-size: 1000MB
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://switchyard.proxy.rlwy.net:31597/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: kvyZoPogEvWyfFMLEyZCqXQNUsqMkXym
     hikari:
       maximum-pool-size: 100
       minimum-idle: 100
