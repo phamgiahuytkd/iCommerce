@@ -76,3 +76,7 @@ cors:
     - http://localhost:3001
     - https://ad-cosmetic.vercel.app
     - https://cosmetic-sigma.vercel.app
+
+fraud:
+  api:
+    url: ${FRAUD_API_URL:http://localhost:5000}

@@ -8,6 +8,7 @@ import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,10 @@ public class FraudService {
 
     // Constructor dùng để Spring inject UserRepository
     @Autowired
-    public FraudService(UserRepository userRepository) {
+    public FraudService(UserRepository userRepository, @Value("${fraud.api.url}") String fraudApiUrl) {
         this.userRepository = userRepository;
         this.webClient = WebClient.builder()
-                .baseUrl("http://localhost:5000")
+                .baseUrl(fraudApiUrl)
                 .build();
     }
 
