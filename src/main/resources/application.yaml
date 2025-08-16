@@ -79,4 +79,4 @@ cors:
 
 fraud:
   api:
-    url: ${FRAUD_API_URL:http://localhost:5000}
+    url: ${FRAUD_API_URL}
