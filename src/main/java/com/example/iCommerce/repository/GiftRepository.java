@@ -3,9 +3,11 @@ package com.example.iCommerce.repository;
 import com.example.iCommerce.dto.response.GiftResponse;
 import com.example.iCommerce.entity.Brand;
 import com.example.iCommerce.entity.Gift;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -77,6 +79,37 @@ public interface GiftRepository extends JpaRepository<Gift, String> {
 """, nativeQuery = true)
     List<Object[]> findValidGiftsByProductVariantId(@Param("productVariantId") String productVariantId);
 
+    @Query(value = """
+    SELECT
+        g.id,
+        gpv.id,
+        gp.name,
+        gpv.image,
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'id', av.name,
+                'attribute_id', a.name
+            )
+        ) AS attribute_values,
+        g.stock,
+        g.start_day,
+        g.end_day,
+        GROUP_CONCAT(DISTINCT pg.product_variant_id) AS product_variant_ids
+    FROM product_variant_gift pg
+    JOIN gift g ON g.id = pg.gift_id
+    JOIN product_variant gpv ON gpv.id = g.product_variant_id
+    JOIN product gp ON gp.id = gpv.product_id
+    LEFT JOIN variant_attribute va ON va.product_variant_id = gpv.id
+    LEFT JOIN attribute_value av ON va.attribute_value_id = av.id
+    LEFT JOIN attribute a ON a.id = av.attribute_id
+    WHERE pg.gift_id = :giftID
+      AND g.start_day <= CURRENT_TIMESTAMP
+      AND g.end_day >= CURRENT_TIMESTAMP
+      AND g.stock > 0
+    GROUP BY g.id, gpv.id, gp.name, gpv.image, g.stock, g.start_day, g.end_day
+""", nativeQuery = true)
+    List<Object[]> findValidGiftById(@Param("giftID") String giftID);
+
 
     @Query(value = """
     SELECT
@@ -105,5 +138,11 @@ public interface GiftRepository extends JpaRepository<Gift, String> {
     GROUP BY g.id, pv.id, p.name, pv.image, g.stock, g.start_day, g.end_day
 """, nativeQuery = true)
     Page<Object[]> findAllInfoGifts(Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM product_variant_gift WHERE gift_id = :giftId", nativeQuery = true)
+    void deleteGiftRelations(@Param("giftId") String giftId);
+
 
 }

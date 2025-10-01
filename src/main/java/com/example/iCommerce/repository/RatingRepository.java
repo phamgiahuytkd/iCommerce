@@ -61,8 +61,8 @@ public interface RatingRepository extends JpaRepository<Rating, String> {
         c.order_id AS order_id,
         JSON_ARRAYAGG(
             JSON_OBJECT(
-                'id', av.id,
-                'attribute_id', a.id
+                'id', av.name,
+                'attribute_id', a.name
             )
         ) AS attribute_values
     FROM cart c

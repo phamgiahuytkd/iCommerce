@@ -11,6 +11,7 @@ import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.mapper.BrandMapper;
 import com.example.iCommerce.mapper.GiftMapper;
 import com.example.iCommerce.repository.BrandRepository;
+import com.example.iCommerce.repository.CartRepository;
 import com.example.iCommerce.repository.GiftRepository;
 import com.example.iCommerce.repository.ProductVariantRepository;
 import jakarta.transaction.Transactional;
@@ -36,6 +37,7 @@ public class GiftService {
     GiftRepository giftRepository;
     GiftMapper giftMapper;
     ProductVariantRepository productVariantRepository;
+    private final CartRepository cartRepository;
 
 
     @PreAuthorize("hasRole('USER')")
@@ -47,6 +49,16 @@ public class GiftService {
     public List<GiftResponse> getGiftsProductVariant(String id){
 
         return giftMapper.toResponses(giftRepository.findValidGiftsByProductVariantId(id));
+    }
+
+    public GiftResponse getGift(String id){
+
+        List<Object[]> product = giftRepository.findValidGiftById(id);
+        if(product.size() < 1){
+            throw new AppException(ErrorCode.GIFT_NOT_EXISTED);
+        }
+
+        return giftMapper.toResponse(product.get(0));
     }
 
 
@@ -133,12 +145,88 @@ public class GiftService {
         return giftMapper.toResponses(page);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteGift(String id){
+        Gift gift = giftRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.GIFT_NOT_EXISTED)
+        );
+
+        gift.setEnd_day(LocalDateTime.now());
+        giftRepository.save(gift);
+
+    }
 
 
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public void updateGift(String id, GiftRequest request){
+
+        Gift gift = giftRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.GIFT_NOT_EXISTED)
+        );
+
+        // Kiểm tra product_variant_id (ProductVariant làm quà)
+        ProductVariant giftProductVariant = productVariantRepository.findById(request.getProduct_variant_id())
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        // Kiểm tra product_variant_ids (chuỗi ID)
+        if (request.getProduct_variant_ids() == null || request.getProduct_variant_ids().isEmpty()) {
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+
+        // Tách chuỗi product_variant_ids thành danh sách
+        List<String> variantIds = Arrays.asList(request.getProduct_variant_ids().split(","));
+        if (variantIds.isEmpty()) {
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+
+        // Kiểm tra tất cả ProductVariant trong product_variant_ids tồn tại
+        List<ProductVariant> productVariants = productVariantRepository.findAllById(variantIds);
+        if (productVariants.size() != variantIds.size()) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTED);
+        }
+
+        // Kiểm tra stock và ngày hợp lệ
+        if (request.getStock() == null || request.getStock() < 0) {
+            throw new AppException(ErrorCode.INVALID_STOCK);
+        }
+
+        if (request.getStart_day() == null || request.getEnd_day() == null ||
+                request.getStart_day().isAfter(request.getEnd_day())) {
+            throw new AppException(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        if (request.getEnd_day().isBefore(LocalDateTime.now())) {
+            throw new AppException(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        giftRepository.deleteGiftRelations(id);
+        gift.getProductVariants().clear();
 
 
+        gift.setProductVariant(giftProductVariant);
+        gift.setStock(request.getStock());
+        gift.setStart_day(request.getStart_day());
+        gift.setEnd_day(request.getEnd_day());
+
+        // Thêm các ProductVariant vào danh sách productVariants của Gift
+        gift.getProductVariants().addAll(productVariants);
+
+        // Cập nhật danh sách gifts của từng ProductVariant
+        for (ProductVariant productVariant : productVariants) {
+            if (productVariant.getGifts() == null) {
+                productVariant.setGifts(new ArrayList<>());
+            }
+            productVariant.getGifts().add(gift);
+        }
+
+        // Lưu Gift
+        gift = giftRepository.save(gift);
+        // Lưu tất cả ProductVariant
+        productVariantRepository.saveAll(productVariants);
+
+    }
 
 
 

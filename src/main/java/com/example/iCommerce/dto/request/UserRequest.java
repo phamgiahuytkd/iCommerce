@@ -5,6 +5,7 @@ import com.example.iCommerce.validator.PasswordConstraint;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,5 +25,5 @@ public class UserRequest {
     String default_shipping_address;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     LocalDate date_of_birth;
-    String avatar;
+    MultipartFile avatar;
 }

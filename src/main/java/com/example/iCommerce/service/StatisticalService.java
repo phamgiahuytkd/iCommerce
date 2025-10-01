@@ -13,6 +13,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -25,8 +27,8 @@ public class StatisticalService {
     ProductVariantMapper productVariantMapper;
 
     @PreAuthorize("hasRole('ADMIN')")
-    public OverviewResponse getOverview(String type) {
-        List<Object[]> raw = orderRepository.getOverview(type);
+    public OverviewResponse getOverview(String type, LocalDate date) {
+        List<Object[]> raw = orderRepository.getOverview(type, date);
         Object[] data = raw.get(0);
         return OverviewResponse.builder()
                 .total_orders(((Number) data[0]).longValue())
@@ -38,8 +40,23 @@ public class StatisticalService {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<RevenueByCategoryResponse> getRevenueByCategory(String type) {
-        List<Object[]> raw = orderRepository.getRevenueByCategory(type);
+    public List<RevenueByCategoryResponse> getRevenueByCategory(String type, LocalDate date) {
+        List<Object[]> raw = orderRepository.getRevenueByCategory(type, date);
+
+        return raw.stream()
+                .map(obj -> RevenueByCategoryResponse.builder()
+                        .id(obj[0].toString()) // ép sang String
+                        .name((String) obj[1])
+                        .revenue(
+                                obj[2] != null ? ((Number) obj[2]).longValue() : 0L
+                        )
+                        .build())
+                .toList();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<RevenueByCategoryResponse> getRevenueByBrand(String type, LocalDate date) {
+        List<Object[]> raw = orderRepository.getRevenueByBrand(type, date);
 
         return raw.stream()
                 .map(obj -> RevenueByCategoryResponse.builder()
@@ -54,15 +71,15 @@ public class StatisticalService {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Object[]> getRevenueByDate(String type) {
-        List<Object[]> raw = orderRepository.getRevenueByDate(type);
+    public List<Object[]> getRevenueByDate(String type, LocalDate date) {
+        List<Object[]> raw = orderRepository.getRevenueByDate(type, date);
         return raw;
     }
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Object[]> getTopSellingProducts(String type) {
-        List<Object[]> raw = orderRepository.getTopSellingProducts(type);
+    public List<Object[]> getTopSellingProducts(String type, LocalDate date) {
+        List<Object[]> raw = orderRepository.getTopSellingProducts(type, date);
         return raw;
     }
 
@@ -74,8 +91,8 @@ public class StatisticalService {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Object[]> getTopGiftSelected(String type) {
-        List<Object[]> raw = orderRepository.findTopGiftSelected(type);
+    public List<Object[]> getTopGiftSelected(String type, LocalDate date) {
+        List<Object[]> raw = orderRepository.findTopGiftSelected(type, date);
         return raw;
     }
 

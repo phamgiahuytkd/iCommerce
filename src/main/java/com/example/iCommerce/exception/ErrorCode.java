@@ -39,10 +39,13 @@ public enum ErrorCode {
 
     IS_SOCIAL_ACCOUNT(4001, "Không khả dụng với tài khoản mạng xã hội.", HttpStatus.BAD_REQUEST),
 
+    VOUCHER_ALREADY_EXISTS(3007, "Mã giảm giá đã tồn tại", HttpStatus.BAD_REQUEST),
+    VOUCHER_NOT_EXISTED(3006, "Mã giảm giá không tồn tại", HttpStatus.BAD_REQUEST),
 
 
     INVALID_IMAGE(9001, "Ảnh không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_IMAGE_FORMAT(9002, "Không đúng định dạng ảnh", HttpStatus.BAD_REQUEST),
+    IMAGE_NOT_EXISTED(9003, "Ảnh không tồn tại.", HttpStatus.BAD_REQUEST),
 
 
 

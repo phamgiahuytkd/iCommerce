@@ -33,8 +33,6 @@ public class ProductController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<String> createProduct(
             @ModelAttribute ProductRequest request) throws Exception {
-        System.out.println("✅ " + request.getName());
-        System.out.println("✅ Số biến thể: " + request.getVariants().size());
         productService.createProduct(request);
         return ApiResponse.<String>builder()
                 .result("Đã thêm sản phẩm!")

@@ -11,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -221,124 +223,259 @@ public interface OrderRepository extends JpaRepository<Order, String> {
         WHERE os.order_id = o.id AND os.status = 'PAID'
     )
     AND (
-        (:type = 'WEEK' AND YEAR(o.date) = YEAR(CURDATE()) AND WEEK(o.date, 1) = WEEK(CURDATE(), 1))
-        OR (:type = 'MONTH' AND YEAR(o.date) = YEAR(CURDATE()) AND MONTH(o.date) = MONTH(CURDATE()))
-        OR (:type = 'YEAR' AND YEAR(o.date) = YEAR(CURDATE()))
+        (:type = 'DAY'   AND DATE(o.date) = :date)
+        OR (:type = 'WEEK'
+            AND YEAR(o.date) = YEAR(:date)
+            AND WEEK(o.date, 1) = WEEK(:date, 1))
+        OR (:type = 'MONTH'
+            AND YEAR(o.date) = YEAR(:date)
+            AND MONTH(o.date) = MONTH(:date))
+        OR (:type = 'YEAR'
+            AND YEAR(o.date) = YEAR(:date))
         OR (:type = 'ALL')
     )
 """, nativeQuery = true)
-    List<Object[]> getOverview(@Param("type") String type);
+    List<Object[]> getOverview(@Param("type") String type, @Param("date") LocalDate date);
+
 
     @Query(value = """
-    WITH orders_filtered AS (
-        SELECT
-            o.id,
-            o.amount,
-            o.date,
-            CASE
-                WHEN :type = 'WEEK' THEN
-                    CASE DAYOFWEEK(o.date)
-                        WHEN 1 THEN 'CN'
-                        WHEN 2 THEN 'Th 2'
-                        WHEN 3 THEN 'Th 3'
-                        WHEN 4 THEN 'Th 4'
-                        WHEN 5 THEN 'Th 5'
-                        WHEN 6 THEN 'Th 6'
-                        WHEN 7 THEN 'Th 7'
-                    END
-                WHEN :type = 'MONTH' THEN DATE_FORMAT(o.date, '%m-%d')
-                WHEN :type = 'YEAR' THEN CONCAT('Tháng ', DATE_FORMAT(o.date, '%m'))
-                WHEN :type = 'ALL' THEN DATE_FORMAT(o.date, '%Y')  -- Nhóm theo năm
-            END AS time_group
-        FROM orders o
-        WHERE EXISTS (
-            SELECT 1 FROM order_status os1
-            WHERE os1.order_id = o.id AND os1.status = 'PAID'
-        )
-        AND EXISTS (
-            SELECT 1 FROM order_status os2
-            WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
-        )
-        AND (
-            (:type = 'WEEK' AND YEARWEEK(o.date, 1) = YEARWEEK(CURDATE(), 1))
-            OR (:type = 'MONTH' AND DATE_FORMAT(o.date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m'))
-            OR (:type = 'YEAR' AND YEAR(o.date) = YEAR(CURDATE()))
-            OR (:type = 'ALL' AND o.date >= CURDATE() - INTERVAL 4 YEAR) -- Lấy 5 năm gần nhất
-        )
-    ),
-    agg_data AS (
-        SELECT time_group, SUM(DISTINCT amount) AS revenue
-        FROM orders_filtered
-        GROUP BY time_group
-    )
-    
-    SELECT
-        time_group,
-        revenue
-    FROM agg_data
-    ORDER BY time_group;
-""", nativeQuery = true)
-    List<Object[]> getRevenueByDate(@Param("type") String type);
-
-    @Query(value = """
-    WITH filtered_orders AS (
-        SELECT * FROM orders o
-        WHERE 
-            (:type = 'ALL'
-            OR (:type = 'WEEK' AND o.date >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY))
-            OR (:type = 'MONTH' AND o.date >= DATE_FORMAT(CURDATE(), '%Y-%m-01'))
-            OR (:type = 'YEAR' AND o.date >= DATE_FORMAT(CURDATE(), '%Y-01-01'))
-            )
-    ),
-    top5 AS (
-        SELECT 
-            cat.id AS id,
-            cat.name AS name,
-            SUM(DISTINCT o.amount) AS revenue
-        FROM filtered_orders o
-        JOIN cart c ON c.order_id = o.id
-        JOIN product_variant pv ON c.product_variant_id = pv.id
-        JOIN product p ON pv.product_id = p.id
-        JOIN category cat ON p.category_id = cat.id
-        WHERE EXISTS (
-            SELECT 1 FROM order_status os1 WHERE os1.order_id = o.id AND os1.status = 'PAID'
-        )
-        AND EXISTS (
-            SELECT 1 FROM order_status os2 WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
-        )
-        GROUP BY cat.id, cat.name
-        ORDER BY revenue DESC
-        LIMIT 5
-    ),
-    total_revenue_cte AS (
-        SELECT 
-            SUM(DISTINCT o.amount) AS total_revenue
-        FROM filtered_orders o
-        WHERE EXISTS (
-            SELECT 1 FROM order_status os1 WHERE os1.order_id = o.id AND os1.status = 'PAID'
-        )
-        AND EXISTS (
-            SELECT 1 FROM order_status os2 WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
-        )
-    ),
-    top5_revenue_cte AS (
-        SELECT SUM(revenue) AS top5_revenue FROM top5
-    )
-
-    -- Lấy top 5
-    SELECT * FROM top5
+WITH RECURSIVE days AS (
+    SELECT 1 AS d
+    UNION ALL
+    SELECT d+1 FROM days
+    WHERE d+1 <= DAY(LAST_DAY(:date))
+),
+time_dim AS (
+    -- DAY: 0..23 giờ
+    SELECT LPAD(n,2,'0') AS time_group, 'DAY' AS t
+    FROM (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 
+          UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL 
+          SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 
+          UNION ALL SELECT 14 UNION ALL SELECT 15 UNION ALL SELECT 16 UNION ALL SELECT 17 
+          UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20 UNION ALL SELECT 21 
+          UNION ALL SELECT 22 UNION ALL SELECT 23) h
 
     UNION ALL
+    -- WEEK: Th2..CN
+    SELECT 'Th 2','WEEK' UNION ALL SELECT 'Th 3','WEEK' UNION ALL SELECT 'Th 4','WEEK'
+    UNION ALL SELECT 'Th 5','WEEK' UNION ALL SELECT 'Th 6','WEEK'
+    UNION ALL SELECT 'Th 7','WEEK' UNION ALL SELECT 'CN','WEEK'
 
-    -- Lấy mục "Khác" nếu có
-    SELECT 
-        NULL AS id,
-        'Khác' AS name,
-        (tr.total_revenue - t5.top5_revenue) AS revenue
-    FROM total_revenue_cte tr, top5_revenue_cte t5
-    WHERE (tr.total_revenue - t5.top5_revenue) > 0
+    UNION ALL
+    -- MONTH: số ngày thực tế trong tháng của :date
+    SELECT LPAD(d,2,'0'),'MONTH'
+    FROM days
+
+    UNION ALL
+    -- YEAR: 1..12 tháng (format đồng nhất với orders_filtered)
+    SELECT CONCAT('Tháng ', LPAD(n,2,'0')),'YEAR'
+    FROM (SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 
+          UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 
+          UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12) m
+
+    UNION ALL
+    -- ALL: 5 năm gần nhất tính từ :date
+    SELECT CAST(YEAR(:date)-4 AS CHAR),'ALL'
+    UNION ALL SELECT CAST(YEAR(:date)-3 AS CHAR),'ALL'
+    UNION ALL SELECT CAST(YEAR(:date)-2 AS CHAR),'ALL'
+    UNION ALL SELECT CAST(YEAR(:date)-1 AS CHAR),'ALL'
+    UNION ALL SELECT CAST(YEAR(:date) AS CHAR),'ALL'
+),
+orders_filtered AS (
+    SELECT
+        o.id,
+        o.amount,
+        o.date,
+        CASE
+            WHEN :type = 'DAY' THEN LPAD(HOUR(o.date),2,'0')
+            WHEN :type = 'WEEK' THEN
+                CASE DAYOFWEEK(o.date)
+                    WHEN 1 THEN 'CN'
+                    WHEN 2 THEN 'Th 2'
+                    WHEN 3 THEN 'Th 3'
+                    WHEN 4 THEN 'Th 4'
+                    WHEN 5 THEN 'Th 5'
+                    WHEN 6 THEN 'Th 6'
+                    WHEN 7 THEN 'Th 7'
+                END
+            WHEN :type = 'MONTH' THEN LPAD(DAY(o.date),2,'0')
+            WHEN :type = 'YEAR' THEN CONCAT('Tháng ', LPAD(MONTH(o.date),2,'0'))
+            WHEN :type = 'ALL' THEN DATE_FORMAT(o.date,'%Y')
+        END AS time_group
+    FROM orders o
+    WHERE EXISTS (
+        SELECT 1 FROM order_status os1
+        WHERE os1.order_id = o.id AND os1.status = 'PAID'
+    )
+    AND EXISTS (
+        SELECT 1 FROM order_status os2
+        WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
+    )
+    AND (
+        (:type = 'DAY' AND DATE(o.date) = DATE(:date))
+        OR (:type = 'WEEK' AND YEARWEEK(o.date,1) = YEARWEEK(:date,1))
+        OR (:type = 'MONTH' AND DATE_FORMAT(o.date,'%Y-%m') = DATE_FORMAT(:date,'%Y-%m'))
+        OR (:type = 'YEAR' AND YEAR(o.date) = YEAR(:date))
+        OR (:type = 'ALL' AND o.date >= :date - INTERVAL 4 YEAR)
+    )
+),
+agg_data AS (
+    SELECT time_group, SUM(amount) AS revenue
+    FROM orders_filtered
+    GROUP BY time_group
+)
+SELECT td.time_group, COALESCE(a.revenue,0) AS revenue
+FROM time_dim td
+LEFT JOIN agg_data a ON td.time_group = a.time_group AND td.t=:type
+WHERE td.t=:type
+ORDER BY 
+  CASE 
+    WHEN :type = 'DAY' THEN CAST(td.time_group AS UNSIGNED)
+    WHEN :type = 'WEEK' THEN FIELD(td.time_group, 'Th 2','Th 3','Th 4','Th 5','Th 6','Th 7','CN')
+    WHEN :type = 'MONTH' THEN CAST(td.time_group AS UNSIGNED)
+    WHEN :type = 'YEAR' THEN CAST(REPLACE(td.time_group,'Tháng ','') AS UNSIGNED)
+    WHEN :type = 'ALL' THEN CAST(td.time_group AS UNSIGNED)
+  END
 """, nativeQuery = true)
-    List<Object[]> getRevenueByCategory(@Param("type") String type);
+    List<Object[]> getRevenueByDate(@Param("type") String type, @Param("date") LocalDate date);
+
+    @Query(value = """
+WITH filtered_orders AS (
+    SELECT * 
+    FROM orders o
+    WHERE 
+        (:type = 'ALL')
+        OR (:type = 'DAY' AND DATE(o.date) = DATE(:date))
+        OR (:type = 'WEEK' 
+            AND YEARWEEK(o.date, 1) = YEARWEEK(:date, 1))
+        OR (:type = 'MONTH' 
+            AND DATE_FORMAT(o.date, '%Y-%m') = DATE_FORMAT(:date, '%Y-%m'))
+        OR (:type = 'YEAR' 
+            AND YEAR(o.date) = YEAR(:date))
+),
+top5 AS (
+    SELECT 
+        cat.id AS id,
+        cat.name AS name,
+        SUM(DISTINCT o.amount) AS revenue
+    FROM filtered_orders o
+    JOIN cart c ON c.order_id = o.id
+    JOIN product_variant pv ON c.product_variant_id = pv.id
+    JOIN product p ON pv.product_id = p.id
+    JOIN category cat ON p.category_id = cat.id
+    WHERE EXISTS (
+        SELECT 1 FROM order_status os1 
+        WHERE os1.order_id = o.id AND os1.status = 'PAID'
+    )
+    AND EXISTS (
+        SELECT 1 FROM order_status os2 
+        WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
+    )
+    GROUP BY cat.id, cat.name
+    ORDER BY revenue DESC
+    LIMIT 5
+),
+total_revenue_cte AS (
+    SELECT 
+        SUM(DISTINCT o.amount) AS total_revenue
+    FROM filtered_orders o
+    WHERE EXISTS (
+        SELECT 1 FROM order_status os1 
+        WHERE os1.order_id = o.id AND os1.status = 'PAID'
+    )
+    AND EXISTS (
+        SELECT 1 FROM order_status os2 
+        WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
+    )
+),
+top5_revenue_cte AS (
+    SELECT SUM(revenue) AS top5_revenue 
+    FROM top5
+)
+
+-- Lấy top 5
+SELECT * FROM top5
+
+UNION ALL
+
+-- Lấy mục "Khác" nếu có
+SELECT 
+    NULL AS id,
+    'Khác' AS name,
+    (tr.total_revenue - t5.top5_revenue) AS revenue
+FROM total_revenue_cte tr, top5_revenue_cte t5
+WHERE (tr.total_revenue - t5.top5_revenue) > 0
+""", nativeQuery = true)
+    List<Object[]> getRevenueByCategory(@Param("type") String type, @Param("date") LocalDate date);
+
+    @Query(value = """
+WITH filtered_orders AS (
+    SELECT * 
+    FROM orders o
+    WHERE 
+        (:type = 'ALL')
+        OR (:type = 'DAY' AND DATE(o.date) = DATE(:date))
+        OR (:type = 'WEEK' 
+            AND YEARWEEK(o.date, 1) = YEARWEEK(:date, 1))
+        OR (:type = 'MONTH' 
+            AND DATE_FORMAT(o.date, '%Y-%m') = DATE_FORMAT(:date, '%Y-%m'))
+        OR (:type = 'YEAR' 
+            AND YEAR(o.date) = YEAR(:date))
+),
+top5 AS (
+    SELECT 
+        b.id AS id,
+        b.name AS name,
+        SUM(DISTINCT o.amount) AS revenue
+    FROM filtered_orders o
+    JOIN cart c ON c.order_id = o.id
+    JOIN product_variant pv ON c.product_variant_id = pv.id
+    JOIN product p ON pv.product_id = p.id
+    JOIN brand b ON p.brand_id = b.id
+    WHERE EXISTS (
+        SELECT 1 FROM order_status os1 
+        WHERE os1.order_id = o.id AND os1.status = 'PAID'
+    )
+    AND EXISTS (
+        SELECT 1 FROM order_status os2 
+        WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
+    )
+    GROUP BY b.id, b.name
+    ORDER BY revenue DESC
+    LIMIT 5
+),
+total_revenue_cte AS (
+    SELECT 
+        SUM(DISTINCT o.amount) AS total_revenue
+    FROM filtered_orders o
+    WHERE EXISTS (
+        SELECT 1 FROM order_status os1 
+        WHERE os1.order_id = o.id AND os1.status = 'PAID'
+    )
+    AND EXISTS (
+        SELECT 1 FROM order_status os2 
+        WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
+    )
+),
+top5_revenue_cte AS (
+    SELECT SUM(revenue) AS top5_revenue 
+    FROM top5
+)
+
+-- Lấy top 5 brand
+SELECT * FROM top5
+
+UNION ALL
+
+-- Lấy mục "Khác" nếu có
+SELECT 
+    NULL AS id,
+    'Khác' AS name,
+    (tr.total_revenue - t5.top5_revenue) AS revenue
+FROM total_revenue_cte tr, top5_revenue_cte t5
+WHERE (tr.total_revenue - t5.top5_revenue) > 0
+""", nativeQuery = true)
+    List<Object[]> getRevenueByBrand(@Param("type") String type, @Param("date") LocalDate date);
 
 
     @Query(value = """
@@ -362,16 +499,17 @@ public interface OrderRepository extends JpaRepository<Order, String> {
         WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
     )
     AND (
-        (:type = 'WEEK' AND YEARWEEK(o.date, 1) = YEARWEEK(CURDATE(), 1))
-        OR (:type = 'MONTH' AND DATE_FORMAT(o.date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m'))
-        OR (:type = 'YEAR' AND YEAR(o.date) = YEAR(CURDATE()))
+        (:type = 'DAY' AND DATE(o.date) = DATE(:date))
+        OR (:type = 'WEEK' AND YEARWEEK(o.date, 1) = YEARWEEK(:date, 1))
+        OR (:type = 'MONTH' AND YEAR(o.date) = YEAR(:date) AND MONTH(o.date) = MONTH(:date))
+        OR (:type = 'YEAR' AND YEAR(o.date) = YEAR(:date))
         OR (:type = 'ALL')
     )
     GROUP BY p.id, p.image, p.name
     ORDER BY sales DESC
     LIMIT 10
 """, nativeQuery = true)
-    List<Object[]> getTopSellingProducts(@Param("type") String type);
+    List<Object[]> getTopSellingProducts(@Param("type") String type, @Param("date") LocalDate date);
 
 
     @Query(value = """
@@ -406,26 +544,26 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     JOIN product p ON pv.product_id = p.id
     LEFT JOIN cart c ON c.selected_gift_id = g.id
     LEFT JOIN orders o ON o.id = c.order_id
-    WHERE (:type = 'ALL' OR o.date >= 
-      CASE 
-        WHEN :type = 'WEEK' THEN DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
-        WHEN :type = 'MONTH' THEN DATE_FORMAT(CURDATE(), '%Y-%m-01')
-        WHEN :type = 'YEAR' THEN DATE_FORMAT(CURDATE(), '%Y-01-01')
-      END
+    WHERE (
+        (:type = 'DAY'   AND DATE(o.date) = DATE(:date))
+        OR (:type = 'WEEK'  AND YEARWEEK(o.date, 1) = YEARWEEK(:date, 1))
+        OR (:type = 'MONTH' AND YEAR(o.date) = YEAR(:date) AND MONTH(o.date) = MONTH(:date))
+        OR (:type = 'YEAR'  AND YEAR(o.date) = YEAR(:date))
+        OR (:type = 'ALL')
     )
     AND EXISTS (
-          SELECT 1 FROM order_status os1 
-          WHERE os1.order_id = o.id AND os1.status = 'PAID'
-      )
+        SELECT 1 FROM order_status os1 
+        WHERE os1.order_id = o.id AND os1.status = 'PAID'
+    )
     AND EXISTS (
-          SELECT 1 FROM order_status os2 
-          WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
-      )
+        SELECT 1 FROM order_status os2 
+        WHERE os2.order_id = o.id AND os2.status = 'DELIVERED'
+    )
     GROUP BY g.id, pv.id, p.name, pv.image, g.stock, g.start_day, g.end_day
     ORDER BY total_selected_times DESC
     LIMIT 10
 """, nativeQuery = true)
-    List<Object[]> findTopGiftSelected(@Param("type") String type);
+    List<Object[]> findTopGiftSelected(@Param("type") String type, @Param("date") LocalDate date);
 
 
 

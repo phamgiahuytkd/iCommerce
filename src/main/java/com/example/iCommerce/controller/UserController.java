@@ -1,15 +1,13 @@
 package com.example.iCommerce.controller;
 
 import com.example.iCommerce.dto.request.UserRequest;
-import com.example.iCommerce.dto.response.ApiResponse;
-import com.example.iCommerce.dto.response.UserAdminResponse;
-import com.example.iCommerce.dto.response.UserLoggedResponse;
-import com.example.iCommerce.dto.response.UserResponse;
+import com.example.iCommerce.dto.response.*;
 import com.example.iCommerce.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,10 +29,10 @@ public class UserController {
                 .build();
     }
 
-    @PutMapping
-    ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request){
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ApiResponse<UserResponse> updateUser(@ModelAttribute UserRequest request) throws IOException {
         return ApiResponse.<UserResponse>builder()
-                .result( userService.updateUser(request))
+                .result(userService.updateUser(request))
                 .build();
 
     }
@@ -50,13 +48,13 @@ public class UserController {
 
 
 
-//    @GetMapping("/{userID}")
-//    ApiResponse<UserResponse> getUser(@PathVariable("userID") String userID){
-//
-//        return ApiResponse.<UserResponse>builder()
-//                .result(userService.getUser(userID))
-//                .build();
-//    }
+    @GetMapping("/{userID}")
+    ApiResponse<UserResponse> getUser(@PathVariable("userID") String userID){
+
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getUser(userID))
+                .build();
+    }
 
 
 
@@ -96,5 +94,42 @@ public class UserController {
                 .build();
 
     }
+
+
+    ///////Customer//////
+    @GetMapping("/{userID}/overview")
+    ApiResponse<UserOverviewResponse> getUserOverview(@PathVariable("userID") String userID){
+
+        return ApiResponse.<UserOverviewResponse>builder()
+                .result(userService.getUserOverview(userID))
+                .build();
+    }
+
+    @GetMapping("/{userID}/recent-orders")
+    ApiResponse<List<OrderResponse>> getOrders(@PathVariable("userID") String userID){
+
+        return ApiResponse.<List<OrderResponse>>builder()
+                .result(userService.getRecentOrdersUser(userID))
+                .build();
+    }
+
+
+    @GetMapping("/{userID}/top-user-product")
+    ApiResponse<List<Object[]>> getTopUserProducts(@PathVariable("userID") String userID){
+
+        return ApiResponse.<List<Object[]>>builder()
+                .result(userService.getTopUserProducts(userID))
+                .build();
+    }
+
+
+    @GetMapping("/{userID}/top-user-gift")
+    ApiResponse<List<Object[]>> getTopUserGifts(@PathVariable("userID") String userID){
+
+        return ApiResponse.<List<Object[]>>builder()
+                .result(userService.getTopUserGifts(userID))
+                .build();
+    }
+
 
 }

@@ -79,12 +79,12 @@ public class CategoryService {
         // Upload ảnh mới nếu có
         if (image != null && !image.isEmpty()) {
             String originalFileName = image.getOriginalFilename();
-            if (originalFileName == null || !originalFileName.matches(".*\\.(jpg|jpeg|png|gif)$")) {
+            if (originalFileName == null || !originalFileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$")) {
                 throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
             }
 
             // Upload lên Cloudinary
-            String imageUrl = cloudinaryService.upload(image);
+            String imageUrl = cloudinaryService.update(category.getImage(), image);
             category.setImage(imageUrl);
         }
 

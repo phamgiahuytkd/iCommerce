@@ -176,7 +176,12 @@ public class ProductService {
 
         // === Ảnh main product ===
         if (request.getImage() != null && !request.getImage().isEmpty()) {
-            String productImageUrl = cloudinaryService.upload(request.getImage());
+            String originalFileName = request.getImage().getOriginalFilename();
+            if (originalFileName == null || !originalFileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$")) {
+                throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
+            }
+
+            String productImageUrl = cloudinaryService.update(product.getImage(), request.getImage());
             product.setImage(productImageUrl);
         }
 
@@ -221,9 +226,15 @@ public class ProductService {
 
             // Upload ảnh thumbnail variant
             if (variantRequest.getImage() != null && !variantRequest.getImage().isEmpty()) {
-                String variantThumbUrl = cloudinaryService.upload(variantRequest.getImage());
+                String originalFileName = variantRequest.getImage().getOriginalFilename();
+                if (originalFileName == null || !originalFileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$")) {
+                    throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
+                }
+
+                String variantThumbUrl = cloudinaryService.update(variant.getImage(), variantRequest.getImage());
                 variant.setImage(variantThumbUrl);
             }
+
 
             // Upload gallery images variant
             List<String> keptImages = variantRequest.getExistingImages() != null
@@ -232,12 +243,32 @@ public class ProductService {
 
             if (variantRequest.getImages() != null) {
                 for (MultipartFile image : variantRequest.getImages()) {
+                    String originalFileName = image.getOriginalFilename();
+                    if (originalFileName == null || !originalFileName.toLowerCase().matches(".*\\.(jpg|jpeg|png|gif)$")) {
+                        throw new AppException(ErrorCode.INVALID_IMAGE_FORMAT);
+                    }
+
                     String url = cloudinaryService.upload(image);
                     keptImages.add(url);
                 }
             }
 
+            // --- XÓA ẢNH KHÔNG GIỮ LẠI ---
+            List<String> oldImages = variant.getImages() != null && !variant.getImages().isEmpty()
+                    ? Arrays.asList(variant.getImages().split(","))
+                    : new ArrayList<>();
+
+            List<String> deletedImages = oldImages.stream()
+                    .filter(url -> !keptImages.contains(url))
+                    .collect(Collectors.toList());
+
+            for (String url : deletedImages) {
+                cloudinaryService.delete(url);
+            }
+
+            // --- CẬP NHẬT LẠI variant ---
             variant.setImages(String.join(",", keptImages));
+
 
             // Cập nhật discount
             if (variantRequest.getDiscount() != null) {

@@ -32,7 +32,6 @@ public class UserMapperImpl extends UserMapper {
         user.phone( request.getPhone() );
         user.default_shipping_address( map( request.getDefault_shipping_address() ) );
         user.date_of_birth( request.getDate_of_birth() );
-        user.avatar( request.getAvatar() );
 
         return user.build();
     }
@@ -99,9 +98,6 @@ public class UserMapperImpl extends UserMapper {
         }
         if ( request.getDate_of_birth() != null ) {
             user.setDate_of_birth( request.getDate_of_birth() );
-        }
-        if ( request.getAvatar() != null ) {
-            user.setAvatar( request.getAvatar() );
         }
     }
 }

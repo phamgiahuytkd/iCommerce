@@ -2,9 +2,13 @@ package com.example.iCommerce.mapper;
 
 import com.example.iCommerce.dto.response.GiftResponse;
 import com.example.iCommerce.dto.response.ProductVariantAttributeValueResponse;
+import com.example.iCommerce.entity.Gift;
+import com.example.iCommerce.entity.ProductVariant;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
 
 import java.sql.Timestamp;
@@ -15,6 +19,8 @@ import java.util.List;
 public interface GiftMapper {
 
     ObjectMapper mapper = new ObjectMapper();
+
+
 
     // Chuyển JSON từ cột attribute_values -> List<AttributeValueResponse>
     default List<ProductVariantAttributeValueResponse> parseAttributeValuesJson(Object obj) {
@@ -39,6 +45,7 @@ public interface GiftMapper {
                 .stock(row[5] != null ? ((Number) row[5]).longValue() : null)
                 .start_day((row[6] instanceof Timestamp) ? ((Timestamp) row[6]).toLocalDateTime() : null)
                 .end_day((row[7] instanceof Timestamp) ? ((Timestamp) row[7]).toLocalDateTime() : null)
+                .product_variant_ids(row.length > 8 && row[8] != null ? row[8].toString() : null)
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package com.example.iCommerce.dto.response;
 
+import com.example.iCommerce.entity.ProductVariant;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -20,4 +21,5 @@ public class GiftResponse {
     Long stock;
     LocalDateTime start_day;
     LocalDateTime end_day;
+    String product_variant_ids;
 }

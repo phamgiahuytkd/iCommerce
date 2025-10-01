@@ -241,7 +241,7 @@ public AuthenticationResponse authenticateSocialLogin(SocialLoginRequest request
             .build();
 }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public void changePassWord(ChangePassWordRequest request){
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();

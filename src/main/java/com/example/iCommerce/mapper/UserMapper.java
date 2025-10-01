@@ -19,6 +19,7 @@ public abstract class UserMapper {
     @Autowired
     protected AddressRepository addressRepository;
 
+    @Mapping(target = "avatar", ignore = true)
     public abstract User toUser(UserRequest request);
     public abstract UserResponse toUserResponse(User user);
 
@@ -27,6 +28,7 @@ public abstract class UserMapper {
 
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "avatar", ignore = true)
     public abstract void updateUser(@MappingTarget User user, UserRequest request);
 
     // Custom mapping from String (id) to Address

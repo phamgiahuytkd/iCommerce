@@ -2,13 +2,12 @@ package com.example.iCommerce.service;
 
 
 import com.example.iCommerce.dto.request.UserRequest;
-import com.example.iCommerce.dto.response.UserAdminResponse;
-import com.example.iCommerce.dto.response.UserLoggedResponse;
-import com.example.iCommerce.dto.response.UserResponse;
+import com.example.iCommerce.dto.response.*;
 import com.example.iCommerce.entity.User;
 import com.example.iCommerce.enums.Role;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
+import com.example.iCommerce.mapper.OrderMapper;
 import com.example.iCommerce.mapper.UserMapper;
 import com.example.iCommerce.repository.UserRepository;
 import lombok.AccessLevel;
@@ -41,6 +40,8 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    CloudinaryService cloudinaryService;
+    OrderMapper orderMapper;
     String uploadDir = "uploads/";
 
 
@@ -66,12 +67,16 @@ public class UserService {
 
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
-    public UserResponse updateUser(UserRequest request){
+    public UserResponse updateUser(UserRequest request) throws IOException {
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
         User user = userRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            String avatarUrl = cloudinaryService.upload(request.getAvatar());
+            user.setAvatar(avatarUrl);
+        }
 
         userMapper.updateUser(user, request);
 
@@ -126,7 +131,7 @@ public class UserService {
 
 
 
-    @PostAuthorize("returnObject.id == authentication.name")
+    @PostAuthorize("hasRole('ADMIN')")
     public UserResponse getUser(String id){
         return userMapper.toUserResponse(userRepository.findById(id).
                 orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)));
@@ -174,11 +179,47 @@ public class UserService {
 
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public UserOverviewResponse getUserOverview(String id) {
+        List<Object[]> userOverview = userRepository.getUserOverview(id);
+        if(userOverview.size() < 1){
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+        Object[] data = userOverview.get(0);
+
+        return UserOverviewResponse.builder()
+                .total_accumulated_money(((Number) data[0]).longValue())
+                .total_orders(((Number) data[1]).longValue())
+                .processing_orders(((Number) data[2]).longValue())
+                .success_orders(((Number) data[3]).longValue())
+                .failed_orders(((Number) data[4]).longValue())
+                .fraud_orders(((Number) data[5]).longValue())
+                .build();
+    }
 
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<OrderResponse> getRecentOrdersUser(String id){
+
+        Pageable pageable = PageRequest.of(0, 100);
+
+        Page<Object[]> page = userRepository.findAllOrdersByUserId(id, pageable);
+        return orderMapper.toResponses(page);
+    }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Object[]> getTopUserProducts(String id) {
+        List<Object[]> raw = userRepository.findTopProductSelectedByUser(id);
+        return raw;
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Object[]> getTopUserGifts(String id) {
+        List<Object[]> raw = userRepository.findTopGiftSelectedByUser(id);
+        return raw;
+    }
 
 
 

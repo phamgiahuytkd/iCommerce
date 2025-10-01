@@ -1,12 +1,9 @@
 package com.example.iCommerce.controller;
 
 import com.example.iCommerce.dto.request.AddressRequest;
-import com.example.iCommerce.dto.request.CartRequest;
 import com.example.iCommerce.dto.response.AddressResponse;
 import com.example.iCommerce.dto.response.ApiResponse;
-import com.example.iCommerce.dto.response.CategoryResponse;
 import com.example.iCommerce.service.AddressService;
-import com.example.iCommerce.service.CategoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -42,9 +39,9 @@ public class AddressController {
 
 
     @GetMapping
-    ApiResponse<List<AddressResponse>> findAddressesByUser(){
+    ApiResponse<List<AddressResponse>> getAddressesByUser(){
         return ApiResponse.<List<AddressResponse>>builder()
-                .result(addressService.findAddressesByUser())
+                .result(addressService.getAddressesByUser())
                 .build();
     }
 

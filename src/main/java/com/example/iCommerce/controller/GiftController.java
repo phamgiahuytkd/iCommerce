@@ -38,6 +38,12 @@ public class GiftController {
                 .build();
     }
 
+    @GetMapping("/{id}")
+    ApiResponse<GiftResponse> getGift(@PathVariable("id") String id){
+        return ApiResponse.<GiftResponse>builder()
+                .result(giftService.getGift(id))
+                .build();
+    }
 
     /// admin ///
     @GetMapping
@@ -56,8 +62,22 @@ public class GiftController {
                 .build();
     }
 
+    @DeleteMapping("/{id}")
+    ApiResponse<String> deleteGift(@PathVariable String id){
+        giftService.deleteGift(id);
+        return ApiResponse.<String>builder()
+                .result("Đã xóa quà tặng.")
+                .build();
+    }
 
 
+    @PutMapping("/{id}")
+    ApiResponse<String> updateGift(@PathVariable("id") String id, @RequestBody GiftRequest request){
+        giftService.updateGift(id, request);
+        return ApiResponse.<String>builder()
+                .result("Đã cập nhật quà tặng")
+                .build();
+    }
 
 
 }

@@ -326,7 +326,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.start_day, bg.end_day, bg.gift_id
 
     ORDER BY MAX(pv.create_day) DESC
-""", nativeQuery = true)
+""", countQuery = "SELECT COUNT(*) FROM product p", nativeQuery = true)
     Page<Object[]> findLatestProducts(Pageable pageable);
 
 

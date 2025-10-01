@@ -243,7 +243,7 @@ public interface CartRepository extends JpaRepository<Cart, String> {
     Page<Object[]> findCartResponsesByUserIdAndOrderId(@Param("orderId") String orderId, Pageable pageable);
 
 
-
+    boolean existsBySelectedGift_Id(String giftId);
 
 
 

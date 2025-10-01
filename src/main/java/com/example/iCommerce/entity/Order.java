@@ -37,6 +37,10 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false) // Khai báo khóa ngoại product_id liên kết với bảng Products
     User user;
 
+    @ManyToOne
+    @JoinColumn(name = "voucher_id", nullable = true) // Khai báo khóa ngoại product_id liên kết với bảng Products
+    Voucher voucher;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Cart> carts;
 
