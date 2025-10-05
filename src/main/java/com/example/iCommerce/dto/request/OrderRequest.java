@@ -20,4 +20,5 @@ public class OrderRequest {
     String phone;
     String payment;
     String device;
+    String voucher_id;
 }

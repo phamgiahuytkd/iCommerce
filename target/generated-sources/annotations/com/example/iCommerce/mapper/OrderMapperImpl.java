@@ -28,7 +28,6 @@ public class OrderMapperImpl implements OrderMapper {
         Order.OrderBuilder order = Order.builder();
 
         order.name( request.getName() );
-        order.amount( request.getAmount() );
         order.address( request.getAddress() );
         order.fulladdress( request.getFulladdress() );
         order.note( request.getNote() );

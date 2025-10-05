@@ -7,6 +7,7 @@ import com.example.iCommerce.dto.response.OrderResponse;
 import com.example.iCommerce.entity.Cart;
 import com.example.iCommerce.entity.Order;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.entity.Voucher;
 import com.example.iCommerce.enums.ActionOrder;
 import com.example.iCommerce.enums.CartStatus;
 import com.example.iCommerce.enums.OrderStatus;
@@ -46,6 +47,7 @@ public class OrderService {
     ProductVariantRepository productVariantRepository;
     OrderStatusRepository orderStatusRepository;
     GiftRepository giftRepository;
+    VoucherRepository voucherRepository;
 
 
 
@@ -57,6 +59,8 @@ public class OrderService {
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
 
+
+
         List<Cart> userCarts = cartRepository.findByUserIdAndOrderIsNull(userId);
 
         // Tạo order
@@ -64,9 +68,56 @@ public class OrderService {
         order.setUser(user);
         order.setDate(LocalDateTime.now());
 
+
+        long amount = 0L;
         for (Cart cart : userCarts) {
-            cart.setOrder(order); // ✅ giờ thì ổn
+            amount += cart.getPrice() * cart.getQuantity();
+            cart.setOrder(order);
         }
+
+// === Xử lý voucher nếu có ===
+        if (request.getVoucher_id() != null && !request.getVoucher_id().isEmpty()) {
+            Voucher voucher = voucherRepository.findById(request.getVoucher_id())
+                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED));
+
+            boolean validVoucher =
+                    voucher.getEnd_day().isAfter(LocalDateTime.now()) &&
+                            voucher.getUsed_count() < voucher.getUsage_limit() &&
+                            amount >= voucher.getMin_order_amount() &&
+                            user.getReputation() >= 100;
+
+            if (validVoucher) {
+                order.setVoucher(voucher);
+
+                long discount = 0L;
+                if ("FIXED_AMOUNT".equalsIgnoreCase(voucher.getVoucher_type())) {
+                    discount = voucher.getMax_amount(); // giảm cố định
+                } else if ("PERCENTAGE".equalsIgnoreCase(voucher.getVoucher_type())) {
+                    discount = Math.round(amount * (voucher.getPercent() / 100.0));
+                    // không vượt quá max_amount
+                    discount = Math.min(discount, voucher.getMax_amount());
+                }
+
+                // Giảm giá không được âm
+                long finalAmount = Math.max(0, amount - discount);
+                order.setAmount(finalAmount);
+
+                // Cập nhật lượt dùng voucher
+                voucher.setUsed_count(voucher.getUsed_count() + 1);
+                voucherRepository.save(voucher);
+
+            } else {
+                // Không hợp lệ (hết hạn, hết lượt, không đủ điều kiện)
+                order.setAmount(amount);
+            }
+
+        } else {
+            // Không dùng voucher
+            order.setAmount(amount);
+        }
+
+
+
         order.setCarts(userCarts);
         order = orderRepository.save(order);
         com.example.iCommerce.entity.OrderStatus orderStatus = com.example.iCommerce.entity.OrderStatus.builder()
@@ -158,7 +209,6 @@ public class OrderService {
 
 
 
-
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public OrderResponse getOrder(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -187,7 +237,7 @@ public class OrderService {
 
 
 
-    //////////////////////////////////
+    ////////////////////////////////
 
     @PreAuthorize("hasRole('USER')")
     public List<OrderResponse> getUserOrdersPerStatus(String status){

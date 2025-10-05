@@ -69,6 +69,7 @@ public class UserMapperImpl extends UserMapper {
         userLoggedResponse.full_name( user.getFull_name() );
         userLoggedResponse.avatar( user.getAvatar() );
         userLoggedResponse.account_type( user.getAccount_type() );
+        userLoggedResponse.reputation( user.getReputation() );
 
         userLoggedResponse.default_address( mapAddressToId(user.getDefault_shipping_address()) );
 

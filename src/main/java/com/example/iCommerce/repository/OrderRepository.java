@@ -4,6 +4,7 @@ import com.example.iCommerce.dto.response.OrderResponse;
 import com.example.iCommerce.dto.response.OverviewResponse;
 import com.example.iCommerce.entity.Order;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.entity.Voucher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, String> {
@@ -566,6 +568,8 @@ WHERE (tr.total_revenue - t5.top5_revenue) > 0
     List<Object[]> findTopGiftSelected(@Param("type") String type, @Param("date") LocalDate date);
 
 
-
+    /// voucher ///
+    @Query("SELECT o.voucher FROM Order o WHERE o.id = :orderId")
+    Optional<Voucher> findVoucherByOrderId(@Param("orderId") String orderId);
 
 }

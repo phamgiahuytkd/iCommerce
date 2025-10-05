@@ -56,10 +56,24 @@ public class VoucherController {
                 .build();
     }
 
+    @GetMapping("/user")
+    ApiResponse<List<VoucherResponse>> getVouchersByUser(){
+        return ApiResponse.<List<VoucherResponse>>builder()
+                .result(voucherService.getVouchersByUser())
+                .build();
+    }
+
     @GetMapping("/{id}")
     ApiResponse<VoucherResponse> getVoucher(@PathVariable("id") String id){
         return ApiResponse.<VoucherResponse>builder()
                 .result(voucherService.getVoucher(id))
+                .build();
+    }
+
+    @GetMapping("/{id}/order")
+    ApiResponse<VoucherResponse> getVoucherByOrder(@PathVariable("id") String id){
+        return ApiResponse.<VoucherResponse>builder()
+                .result(voucherService.getVoucherByOrder(id))
                 .build();
     }
 

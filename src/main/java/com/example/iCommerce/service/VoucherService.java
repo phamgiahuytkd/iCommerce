@@ -13,6 +13,7 @@ import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.mapper.AddressMapper;
 import com.example.iCommerce.mapper.VoucherMapper;
 import com.example.iCommerce.repository.AddressRepository;
+import com.example.iCommerce.repository.OrderRepository;
 import com.example.iCommerce.repository.UserRepository;
 import com.example.iCommerce.repository.VoucherRepository;
 import lombok.AccessLevel;
@@ -31,6 +32,7 @@ import java.util.List;
 public class VoucherService {
     VoucherMapper voucherMapper;
     VoucherRepository voucherRepository;
+    OrderRepository orderRepository;
 
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -116,10 +118,15 @@ public class VoucherService {
 
 
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<VoucherResponse> getVouchers() {
 
         return voucherRepository.findAll().stream().map(voucherMapper::toVoucherResponse).toList();
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    public List<VoucherResponse> getVouchersByUser() {
+        return voucherRepository.findValidVouchers(LocalDateTime.now()).stream().map(voucherMapper::toVoucherResponse).toList();
     }
 
 
@@ -129,6 +136,15 @@ public class VoucherService {
         Voucher voucher = voucherRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.VOUCHER_NOT_EXISTED)
         );
+
+
+        return voucherMapper.toVoucherResponse(voucher);
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public VoucherResponse getVoucherByOrder(String id) {
+
+        Voucher voucher = orderRepository.findVoucherByOrderId(id).orElse(null);
 
 
         return voucherMapper.toVoucherResponse(voucher);

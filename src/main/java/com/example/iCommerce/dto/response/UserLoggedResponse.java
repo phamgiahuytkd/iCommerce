@@ -13,4 +13,5 @@ public class UserLoggedResponse {
     String avatar;
     String default_address;
     String account_type;
+    Integer reputation;
 }

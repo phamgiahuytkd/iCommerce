@@ -17,6 +17,8 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
 
+    @Mapping(target = "voucher", ignore = true)
+    @Mapping(target = "amount", ignore = true)
     Order toOrder(OrderRequest request);
 
     Order toOrderNow(OrderNowRequest request);

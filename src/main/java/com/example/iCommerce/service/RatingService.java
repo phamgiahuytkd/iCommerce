@@ -82,6 +82,9 @@ public class RatingService {
         Order order = orderRepository.findById(request.getOrder_id())
                 .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
 
+        user.setReputation(Math.min(user.getReputation() + 5, 100));
+        userRepository.save(user);
+
         Rating rating = ratingMapper.toRating(request);
         rating.setUser(user);
         rating.setOrder(order);

@@ -28,7 +28,7 @@ public class Voucher {
     LocalDateTime end_day;
     Integer usage_limit;
     Integer used_count;
-    @OneToMany(mappedBy = "voucher", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "voucher")
     List<Order> orders;
 
 }
