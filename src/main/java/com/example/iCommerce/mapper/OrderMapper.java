@@ -44,7 +44,7 @@ public interface OrderMapper {
                 .build();
     }
 
-    default List<OrderResponse> toResponses(Page<Object[]> rows) {
+    default List<OrderResponse> toResponses(List<Object[]> rows) {
         return rows.stream().map(this::toResponse).toList();
     }
 }
