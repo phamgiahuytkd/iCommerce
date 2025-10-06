@@ -81,8 +81,9 @@ public interface OrderRepository extends JpaRepository<Order, String> {
       AND status = :status
     ORDER BY latest_update_day DESC
     """, nativeQuery = true)
-    List<Object[]> findOrdersByUserAndStatus(@Param("userId") String userId,
-                                             @Param("status") String status);
+    Page<Object[]> findOrdersByUserAndStatus(@Param("userId") String userId,
+                                             @Param("status") String status,
+                                             Pageable pageable);
 
 
     @Query(value = """
@@ -200,7 +201,7 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     WHERE (:status = 'all' OR status = :status)
     ORDER BY latest_update_day DESC
     """, nativeQuery = true)
-    List<Object[]> findAllOrdersByStatus(@Param("status") String status);
+    Page<Object[]> findAllOrdersByStatus(@Param("status") String status, Pageable pageable);
 
 
 

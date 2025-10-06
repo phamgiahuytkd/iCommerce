@@ -161,7 +161,7 @@ public interface UserRepository extends JpaRepository<User, String> {
         ORDER BY latest_update_day DESC
         """,
             nativeQuery = true)
-    List<Object[]> findAllOrdersByUserId(@Param("userId") String userId);
+    Page<Object[]> findAllOrdersByUserId(@Param("userId") String userId, Pageable pageable);
 
     @Query(value = """
     SELECT 

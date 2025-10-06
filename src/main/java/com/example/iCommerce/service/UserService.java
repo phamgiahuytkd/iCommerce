@@ -204,7 +204,7 @@ public class UserService {
 
         Pageable pageable = PageRequest.of(0, 100);
 
-        List<Object[]> page = userRepository.findAllOrdersByUserId(id);
+        Page<Object[]> page = userRepository.findAllOrdersByUserId(id, pageable);
         return orderMapper.toResponses(page);
     }
 
