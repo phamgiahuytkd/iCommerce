@@ -108,8 +108,8 @@ public interface RatingRepository extends JpaRepository<Rating, String> {
         p.name AS name,
         JSON_ARRAYAGG(
             JSON_OBJECT(
-                'id', av.id,
-                'attribute_id', a.id
+                'id', av.name,
+                'attribute_id', a.name
             )
         ) AS attribute_values,
         pv.image AS image,

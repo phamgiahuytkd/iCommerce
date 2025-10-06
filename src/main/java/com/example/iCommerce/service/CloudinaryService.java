@@ -51,23 +51,29 @@ public class CloudinaryService {
     }
 
     public String update(String secureUrl, MultipartFile file) throws IOException {
-        // 1. Tìm trong DB
-        CloudinaryImage cloudinaryImage = cloudinaryImageRepository.findById(secureUrl)
-                .orElse(new CloudinaryImage());
+        // 1. Tìm entity cũ
+        cloudinaryImageRepository.findById(secureUrl).ifPresent(oldImage -> {
+            try {
+                // Xóa ảnh cũ trên Cloudinary
+                if(oldImage.getPublic_id() != null && !oldImage.getPublic_id().isEmpty()) {
+                    cloudinary.uploader().destroy(oldImage.getPublic_id(), ObjectUtils.emptyMap());
+                }
+                // Xóa record cũ trong DB
+                cloudinaryImageRepository.delete(oldImage);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
-        // 2. Xóa ảnh cũ trên Cloudinary bằng public_id
-        if (cloudinaryImage.getPublic_id() != null && !cloudinaryImage.getPublic_id().isEmpty()) {
-            cloudinary.uploader().destroy(cloudinaryImage.getPublic_id(), ObjectUtils.emptyMap());
-        }
-
-        // 3. Upload ảnh mới
+        // 2. Upload ảnh mới
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
                 ObjectUtils.asMap("folder", "iCommerce/images"));
 
-        // 4. Cập nhật lại record trong DB
-        cloudinaryImage.setId(uploadResult.get("secure_url").toString());
-        cloudinaryImage.setPublic_id(uploadResult.get("public_id").toString());
-        cloudinaryImageRepository.save(cloudinaryImage);
+        // 3. Tạo record mới
+        CloudinaryImage newImage = new CloudinaryImage();
+        newImage.setId(uploadResult.get("secure_url").toString());  // nếu vẫn dùng URL làm ID
+        newImage.setPublic_id(uploadResult.get("public_id").toString());
+        cloudinaryImageRepository.save(newImage);
 
         return uploadResult.get("secure_url").toString();
     }
