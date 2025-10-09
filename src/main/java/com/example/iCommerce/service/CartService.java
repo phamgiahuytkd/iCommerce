@@ -199,8 +199,7 @@ public class CartService {
         User user = userRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
-        Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> page = cartRepository.findCartResponsesByUserId(id, pageable);
+        List<Object[]> page = cartRepository.findCartResponsesByUserId(id);
         return cartMapper.toResponses(page);
     }
 
@@ -213,8 +212,7 @@ public class CartService {
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
 
-        Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> raw = cartRepository.findCartResponsesByUserIdAndOrderId(orderId, pageable);
+        List<Object[]> raw = cartRepository.findCartResponsesByUserIdAndOrderId(orderId);
         return cartMapper.toResponses(raw);
     }
 

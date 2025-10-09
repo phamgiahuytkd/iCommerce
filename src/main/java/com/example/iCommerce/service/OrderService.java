@@ -246,9 +246,8 @@ public class OrderService {
         User user = userRepository.findById(id).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
-        Pageable pageable = PageRequest.of(0, 100);
 
-        Page<Object[]> page = orderRepository.findOrdersByUserAndStatus(id, status, pageable);
+        List<Object[]> page = orderRepository.findOrdersByUserAndStatus(id, status);
         return orderMapper.toResponses(page);
     }
 
@@ -257,9 +256,8 @@ public class OrderService {
     @PreAuthorize("hasRole('ADMIN')")
     public List<OrderResponse> getOrders(String status){
 
-        Pageable pageable = PageRequest.of(0, 100);
 
-        Page<Object[]> page = orderRepository.findAllOrdersByStatus(status, pageable);
+        List<Object[]> page = orderRepository.findAllOrdersByStatus(status);
         return orderMapper.toResponses(page);
     }
 

@@ -20,7 +20,7 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
     private EntityManager entityManager;
 
     @Override
-    public Page<Object[]> findByDynamicQuery(Pageable pageable, String name, String brandId, String categoryId, Long minPrice, Long maxPrice) {
+    public List<Object[]> findByDynamicQuery(String name, String brandId, String categoryId, Long minPrice, Long maxPrice) {
         StringBuilder queryBuilder = new StringBuilder("""
         WITH best_gift_per_product AS (
             SELECT 
@@ -101,20 +101,16 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
         if (minPrice != null) query.setParameter("min_price", minPrice);
         if (maxPrice != null) query.setParameter("max_price", maxPrice);
 
-        query.setFirstResult((int) pageable.getOffset());
-        query.setMaxResults(pageable.getPageSize());
 
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
 
-        Query countQuery = entityManager.createNativeQuery("SELECT COUNT(DISTINCT p.id) FROM product p");
-        Long total = (long) results.size();
 
-        return new PageImpl<>(results, pageable, total);
+        return results;
     }
 
     @Override
-    public Page<Object[]> searchProductsByNameOrBrandOrCategory(Pageable pageable, String input) {
+    public List<Object[]> searchProductsByNameOrBrandOrCategory( String input) {
         StringBuilder queryBuilder = new StringBuilder("""
         WITH best_gift_per_product AS (
             SELECT 
@@ -177,14 +173,11 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
             query.setParameter("input", input);
         }
 
-        query.setFirstResult((int) pageable.getOffset());
-        query.setMaxResults(pageable.getPageSize());
 
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
-        long total = results.size();
 
-        return new PageImpl<>(results, pageable, total);
+        return results;
     }
 
 }

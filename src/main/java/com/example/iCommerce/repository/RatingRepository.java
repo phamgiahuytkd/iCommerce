@@ -97,7 +97,7 @@ public interface RatingRepository extends JpaRepository<Rating, String> {
             AND r.order_id IS NULL
     """,
             nativeQuery = true)
-    Page<Object[]> findProductsToRateByUser(@Param("userId") String userId, Pageable pageable);
+    List<Object[]> findProductsToRateByUser(@Param("userId") String userId);
 
 
 
@@ -140,6 +140,6 @@ public interface RatingRepository extends JpaRepository<Rating, String> {
     ORDER BY
         r.create_day DESC
 """, nativeQuery = true)
-    Page<Object[]> findAllRatingsByUserId(@Param("userId") String userId, Pageable pageable);
+    List<Object[]> findAllRatingsByUserId(@Param("userId") String userId);
 
 }

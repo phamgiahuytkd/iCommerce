@@ -62,7 +62,7 @@ public interface ProductMapper {
 
 
     // Chuyển List<Object[]> → List<DTO>
-    default List<ProductResponse> toResponses(Page<Object[]> rows) {
+    default List<ProductResponse> toResponses(List<Object[]> rows) {
         return rows.stream().map(this::toResponse).toList();
     }
 

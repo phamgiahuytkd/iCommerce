@@ -62,10 +62,9 @@ public class RatingService {
     //////////////////////
     @PreAuthorize("hasRole('USER')")
     public List<ProductToRateResponse> getProductsToRate(){
-        Pageable pageable = PageRequest.of(0, 100);
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
-        Page<Object[]> page = ratingRepository.findProductsToRateByUser(id, pageable);
+        List<Object[]> page = ratingRepository.findProductsToRateByUser(id);
         return ratingMapper.toProductToRateResponses(page);
     }
 
@@ -117,7 +116,7 @@ public class RatingService {
     public List<UserRatingResponse> getAllRatingsOfUser() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> page = ratingRepository.findAllRatingsByUserId(userId, pageable);
+        List<Object[]> page = ratingRepository.findAllRatingsByUserId(userId);
         return ratingMapper.toUserRatingResponses(page);
     }
 

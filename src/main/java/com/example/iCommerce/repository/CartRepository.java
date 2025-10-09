@@ -145,7 +145,7 @@ public interface CartRepository extends JpaRepository<Cart, String> {
 
     ORDER BY c.id
     """, nativeQuery = true)
-    Page<Object[]> findCartResponsesByUserId(@Param("userId") String userId, Pageable pageable);
+    List<Object[]> findCartResponsesByUserId(@Param("userId") String userId);
 
 
     @Modifying
@@ -240,7 +240,7 @@ public interface CartRepository extends JpaRepository<Cart, String> {
 
     ORDER BY c.id
     """, nativeQuery = true)
-    Page<Object[]> findCartResponsesByUserIdAndOrderId(@Param("orderId") String orderId, Pageable pageable);
+    List<Object[]> findCartResponsesByUserIdAndOrderId(@Param("orderId") String orderId);
 
 
     boolean existsBySelectedGift_Id(String giftId);

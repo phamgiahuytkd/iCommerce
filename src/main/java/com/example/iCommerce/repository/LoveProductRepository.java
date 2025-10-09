@@ -81,7 +81,7 @@ public interface LoveProductRepository extends JpaRepository<LoveProduct, LovePr
 
     ORDER BY lp.create_day DESC
 """, nativeQuery = true)
-    Page<Object[]> findLovedProductsByUserId(Pageable pageable, @Param("userId") String userId);
+    List<Object[]> findLovedProductsByUserId(@Param("userId") String userId);
 
     boolean  existsByUserAndProduct(User user, Product product);
 

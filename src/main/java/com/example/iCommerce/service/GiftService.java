@@ -140,8 +140,8 @@ public class GiftService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public List<GiftResponse> getGifts(){
-        Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> page = giftRepository.findAllInfoGifts(pageable);
+
+        List<Object[]> page = giftRepository.findAllInfoGifts();
         return giftMapper.toResponses(page);
     }
 

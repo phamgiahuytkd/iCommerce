@@ -33,7 +33,7 @@ public interface RatingMapper {
                 .build();
     }
 
-    default List<ProductToRateResponse> toProductToRateResponses(Page<Object[]> rows) {
+    default List<ProductToRateResponse> toProductToRateResponses(List<Object[]> rows) {
         return rows.stream().map(this::toProductToRateResponse).toList();
     }
 
@@ -54,7 +54,7 @@ public interface RatingMapper {
                 .build();
     }
 
-    default List<UserRatingResponse> toUserRatingResponses(Page<Object[]> rows) {
+    default List<UserRatingResponse> toUserRatingResponses(List<Object[]> rows) {
         return rows.stream().map(this::toUserRatingResponse).toList();
     }
 

@@ -137,7 +137,7 @@ public interface GiftRepository extends JpaRepository<Gift, String> {
       AND g.stock > 0
     GROUP BY g.id, pv.id, p.name, pv.image, g.stock, g.start_day, g.end_day
 """, nativeQuery = true)
-    Page<Object[]> findAllInfoGifts(Pageable pageable);
+    List<Object[]> findAllInfoGifts();
 
     @Modifying
     @Transactional

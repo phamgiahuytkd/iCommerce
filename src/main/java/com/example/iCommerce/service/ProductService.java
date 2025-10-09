@@ -316,24 +316,19 @@ public class ProductService {
 
 
     public List<ProductResponse> getProducts(){
-        Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> page = productRepository.findProducts(pageable);
-
+        List<Object[]> page = productRepository.findProducts();
         return productMapper.toResponses(page);
     }
 
     public List<ProductResponse> getTop10ProductDiscount() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Object[]> page = productRepository.findTop10ProductDiscount(pageable);
-
+        List<Object[]> page = productRepository.findTop10ProductDiscount();
         return productMapper.toResponses(page);
 
     }
 
 
     public List<ProductResponse> getLatestProducts() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Object[]> page = productRepository.findLatestProducts(pageable);
+        List<Object[]> page = productRepository.findLatestProducts();
         return productMapper.toResponses(page); // Chuyển từ Page<ProductResponse> sang List<ProductResponse>
     }
 
@@ -351,14 +346,12 @@ public class ProductService {
 
 
     public List<ProductResponse> getFilterProduct(SearchProductRequest request) {
-        Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> page = productRepository.findByDynamicQuery(pageable, request.getName(), request.getBrand_id(), request.getCategory_id(), request.getMin_price(), request.getMax_price());
+        List<Object[]> page = productRepository.findByDynamicQuery(request.getName(), request.getBrand_id(), request.getCategory_id(), request.getMin_price(), request.getMax_price());
         return productMapper.toResponses(page);
     }
 
     public List<ProductResponse> getSearchProduct(SearchProductRequest request) {
-        Pageable pageable = PageRequest.of(0, 100);
-        Page<Object[]> page = productRepository.searchProductsByNameOrBrandOrCategory(pageable, request.getName());
+        List<Object[]> page = productRepository.searchProductsByNameOrBrandOrCategory(request.getName());
         return productMapper.toResponses(page);
     }
 
@@ -375,8 +368,7 @@ public class ProductService {
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED)
         );
 
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Object[]> page = loveProductRepository.findLovedProductsByUserId(pageable ,id);
+        List<Object[]> page = loveProductRepository.findLovedProductsByUserId(id);
         return productMapper.toResponses(page);
 
     }

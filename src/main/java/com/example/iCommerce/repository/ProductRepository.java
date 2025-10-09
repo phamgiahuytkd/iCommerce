@@ -138,7 +138,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.start_day, bg.end_day, bg.gift_id
     ORDER BY MAX(pv.create_day) DESC
     """, nativeQuery = true)
-    Page<Object[]> findProducts(Pageable pageable);
+    List<Object[]> findProducts();
 
 
     @Query(value = """
@@ -200,7 +200,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
     HAVING MAX(CASE WHEN d.end_day > NOW() AND d.start_day <= NOW() THEN d.percent END) IS NOT NULL
     ORDER BY percent DESC
 """, nativeQuery = true)
-    Page<Object[]> findProductsDiscount(Pageable pageable);
+    List<Object[]> findProductsDiscount();
 
 
     @Query(value = """
@@ -265,7 +265,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
 
     ORDER BY percent DESC
     """, nativeQuery = true)
-    Page<Object[]> findTop10ProductDiscount(Pageable pageable);
+    List<Object[]> findTop10ProductDiscount();
 
     @Query(value = """
     WITH best_gift_per_product AS (
@@ -327,7 +327,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
 
     ORDER BY MAX(pv.create_day) DESC
 """, countQuery = "SELECT COUNT(*) FROM product p", nativeQuery = true)
-    Page<Object[]> findLatestProducts(Pageable pageable);
+    List<Object[]> findLatestProducts();
 
 
 
