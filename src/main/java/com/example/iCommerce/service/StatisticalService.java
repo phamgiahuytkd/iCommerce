@@ -45,14 +45,13 @@ public class StatisticalService {
 
         return raw.stream()
                 .map(obj -> RevenueByCategoryResponse.builder()
-                        .id(obj[0].toString()) // ép sang String
-                        .name((String) obj[1])
-                        .revenue(
-                                obj[2] != null ? ((Number) obj[2]).longValue() : 0L
-                        )
+                        .id(obj[0] != null ? obj[0].toString() : "") // tránh NullPointerException
+                        .name(obj[1] != null ? obj[1].toString() : "Không xác định") // fallback name
+                        .revenue(obj[2] != null ? ((Number) obj[2]).longValue() : 0L)
                         .build())
                 .toList();
     }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     public List<RevenueByCategoryResponse> getRevenueByBrand(String type, LocalDate date) {
@@ -60,11 +59,9 @@ public class StatisticalService {
 
         return raw.stream()
                 .map(obj -> RevenueByCategoryResponse.builder()
-                        .id(obj[0].toString()) // ép sang String
-                        .name((String) obj[1])
-                        .revenue(
-                                obj[2] != null ? ((Number) obj[2]).longValue() : 0L
-                        )
+                        .id(obj[0] != null ? obj[0].toString() : "") // tránh lỗi null
+                        .name(obj[1] != null ? obj[1].toString() : "Không xác định") // fallback name
+                        .revenue(obj[2] != null ? ((Number) obj[2]).longValue() : 0L)
                         .build())
                 .toList();
     }
