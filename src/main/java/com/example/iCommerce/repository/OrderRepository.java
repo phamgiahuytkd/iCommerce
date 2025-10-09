@@ -207,35 +207,36 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 
     // dashboard//
     @Query(value = """
-    SELECT
-        COUNT(DISTINCT o.id) AS total_orders,
-        SUM(DISTINCT o.amount) AS total_revenue,
-        ROUND(SUM(DISTINCT o.amount) * 1.0 / COUNT(DISTINCT o.id), 2) AS average_order,
-        SUM(c.quantity) AS total_sold_products
-    FROM orders o
-    JOIN cart c ON c.order_id = o.id
-    WHERE EXISTS (
-        SELECT 1
-        FROM order_status os
-        WHERE os.order_id = o.id AND os.status = 'DELIVERED'
-    )
-    AND EXISTS (
-        SELECT 1
-        FROM order_status os
-        WHERE os.order_id = o.id AND os.status = 'PAID'
-    )
-    AND (
-        (:type = 'DAY'   AND DATE(o.date) = :date)
-        OR (:type = 'WEEK'
-            AND YEAR(o.date) = YEAR(:date)
-            AND WEEK(o.date, 1) = WEEK(:date, 1))
-        OR (:type = 'MONTH'
-            AND YEAR(o.date) = YEAR(:date)
-            AND MONTH(o.date) = MONTH(:date))
-        OR (:type = 'YEAR'
-            AND YEAR(o.date) = YEAR(:date))
-        OR (:type = 'ALL')
-    )
+SELECT
+    COUNT(DISTINCT o.id) AS total_orders,
+    COALESCE(SUM(DISTINCT o.amount), 0) AS total_revenue,
+    COALESCE(
+        ROUND(SUM(DISTINCT o.amount) * 1.0 / NULLIF(COUNT(DISTINCT o.id), 0), 2),
+        0
+    ) AS average_order,
+    COALESCE(SUM(c.quantity), 0) AS total_sold_products
+FROM orders o
+JOIN cart c ON c.order_id = o.id
+WHERE EXISTS (
+    SELECT 1 FROM order_status os
+    WHERE os.order_id = o.id AND os.status = 'DELIVERED'
+)
+AND EXISTS (
+    SELECT 1 FROM order_status os
+    WHERE os.order_id = o.id AND os.status = 'PAID'
+)
+AND (
+    (:type = 'DAY'   AND DATE(o.date) = DATE(:date))
+    OR (:type = 'WEEK'
+        AND YEAR(o.date) = YEAR(DATE(:date))
+        AND WEEK(o.date, 1) = WEEK(DATE(:date), 1))
+    OR (:type = 'MONTH'
+        AND YEAR(o.date) = YEAR(DATE(:date))
+        AND MONTH(o.date) = MONTH(DATE(:date)))
+    OR (:type = 'YEAR'
+        AND YEAR(o.date) = YEAR(DATE(:date)))
+    OR (:type = 'ALL')
+)
 """, nativeQuery = true)
     List<Object[]> getOverview(@Param("type") String type, @Param("date") LocalDate date);
 
