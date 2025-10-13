@@ -571,4 +571,26 @@ WHERE (tr.total_revenue - t5.top5_revenue) > 0
     @Query("SELECT o.voucher FROM Order o WHERE o.id = :orderId")
     Optional<Voucher> findVoucherByOrderId(@Param("orderId") String orderId);
 
+
+    /// Fraud order ///
+    @Query("""
+    SELECT o
+    FROM Order o
+    JOIN o.orderStatuses s
+    WHERE s.update_day = (
+        SELECT MAX(s2.update_day)
+        FROM OrderStatus s2
+        WHERE s2.order = o
+    )
+    AND s.status = 'DELIVERED'
+    AND s.update_day <= :deadline
+    AND NOT EXISTS (
+        SELECT 1
+        FROM OrderStatus sPaid
+        WHERE sPaid.order = o AND sPaid.status = 'PAID'
+    )
+    """)
+        List<Order> findDeliveredUnpaidOrders(@Param("deadline") LocalDateTime deadline);
+
+
 }

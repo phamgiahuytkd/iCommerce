@@ -3,19 +3,26 @@ package com.example.iCommerce.service;
 
 import com.example.iCommerce.dto.request.UserRequest;
 import com.example.iCommerce.dto.response.*;
+import com.example.iCommerce.entity.Order;
 import com.example.iCommerce.entity.User;
+import com.example.iCommerce.enums.OrderStatus;
 import com.example.iCommerce.enums.Role;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
 import com.example.iCommerce.mapper.OrderMapper;
 import com.example.iCommerce.mapper.UserMapper;
+import com.example.iCommerce.repository.OrderRepository;
+import com.example.iCommerce.repository.OrderStatusRepository;
 import com.example.iCommerce.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,6 +42,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
     UserRepository userRepository;
@@ -43,7 +51,8 @@ public class UserService {
     CloudinaryService cloudinaryService;
     OrderMapper orderMapper;
     String uploadDir = "uploads/";
-
+    OrderRepository orderRepository;
+    OrderStatusRepository orderStatusRepository;
 
     public UserResponse createUser(UserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -221,8 +230,47 @@ public class UserService {
 
 
 
+    /// Reputation ///
+    @Transactional
+    @Scheduled(cron = "0 0 2 * * *") // chạy mỗi ngày lúc 2h sáng
+    public void penalizeUnpaidOrders() {
+        LocalDateTime deadline = LocalDateTime.now().minusHours(24);
 
+        List<Order> overdueOrders = orderRepository.findDeliveredUnpaidOrders(deadline);
 
+        if (overdueOrders.isEmpty()) {
+            log.info("✅ Không có đơn DELIVERED quá 24h chưa thanh toán.");
+            return;
+        }
+
+        for (Order order : overdueOrders) {
+            User user = order.getUser();
+
+            // 🔍 Kiểm tra xem đã có trạng thái PENALTY chưa
+            boolean alreadyPenalized = order.getOrderStatuses().stream()
+                    .anyMatch(s -> s.getStatus().equals(OrderStatus.PENALTY.name()));
+
+            if (alreadyPenalized) {
+                continue; // ✅ bỏ qua nếu đã phạt rồi
+            }
+
+            // ⚠ Giảm uy tín người dùng
+            int newReputation = Math.max(user.getReputation() - 30, 0);
+            user.setReputation(newReputation);
+            userRepository.save(user);
+
+            // 🧾 Tạo thêm trạng thái PENALTY
+            com.example.iCommerce.entity.OrderStatus penaltyStatus = new com.example.iCommerce.entity.OrderStatus();
+            penaltyStatus.setOrder(order);
+            penaltyStatus.setStatus(OrderStatus.PENALTY.name());
+            penaltyStatus.setUpdate_day(LocalDateTime.now());
+            penaltyStatus.setDescription("Đã 24h kể từ khi đơn hàng giao dến, khách hàng vân chưa thanh toán.");
+            orderStatusRepository.save(penaltyStatus);
+
+            log.warn("⚠ User {} bị trừ uy tín vì đơn {} chưa thanh toán sau 24h → thêm trạng thái PENALTY",
+                    user.getFull_name(), order.getId());
+        }
+    }
 
 
 

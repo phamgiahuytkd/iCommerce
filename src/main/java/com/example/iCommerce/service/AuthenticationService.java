@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -230,6 +231,7 @@ public AuthenticationResponse authenticateSocialLogin(SocialLoginRequest request
         newUser.setAvatar(request.getAvatar());
         newUser.setDate_of_birth(request.getDay_of_birth());
         newUser.setReputation(100);
+        newUser.setCreate_day(LocalDateTime.now());
         user = userRepository.save(newUser);
         System.out.println("Saved user: " + user.getAccount_type());
     }

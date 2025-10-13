@@ -40,4 +40,15 @@ public class OrderStatusController {
 
     }
 
+    /// deliver ///
+    @PostMapping("/deliver")
+    ApiResponse<String> createOrderStatusDeliver(@RequestBody OrderStatusRequest request) {
+        orderStatusService.createOrderStatusDeliver(request);
+        return ApiResponse.<String>builder()
+                .result("Đã cập nhật trạng thái.")
+                .build();
+
+    }
+
+
 }

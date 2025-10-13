@@ -24,8 +24,18 @@ public class ApplicationInitConfig {
               if(userRepository.findByEmail("admin@gmail.com").isEmpty()){
                   User user = new User().builder()
                           .email("admin@gmail.com")
-                          .password(passwordEncoder.encode("123456789"))
+                          .password(passwordEncoder.encode("Admin@123456"))
                           .user_type(Role.ADMIN.name())
+                          .reputation(100)
+                          .build();
+                  userRepository.save(user);
+              }
+              if(userRepository.findByEmail("partnership@gmail.com").isEmpty()){
+                  User user = new User().builder()
+                          .email("partnership@gmail.com")
+                          .password(passwordEncoder.encode("partnership@123456"))
+                          .user_type(Role.PARTNERSHIP.name())
+                          .reputation(100)
                           .build();
                   userRepository.save(user);
               }
