@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface OrderStatusRepository extends JpaRepository<OrderStatus, String> {
     List<OrderStatus> findAllByOrder(Order order);
-    boolean existsByOrderAndStatus(Order order, com.example.iCommerce.enums.OrderStatus status);
+    boolean existsByOrderAndStatus(Order order, String status);
 
 
 }

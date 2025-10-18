@@ -108,7 +108,7 @@ public class OrderStatusService {
                 ()-> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION)
         );
 
-        if(!orderStatusRepository.existsByOrderAndStatus(order, OrderStatus.DELIVERING)){
+        if(!orderStatusRepository.existsByOrderAndStatus(order, OrderStatus.DELIVERING.name())){
             for (Cart cart : order.getCarts()) {
                 ProductVariant variant = cart.getProductVariant();
 
