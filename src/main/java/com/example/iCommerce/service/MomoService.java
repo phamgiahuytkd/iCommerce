@@ -6,17 +6,23 @@ import com.example.iCommerce.constant.MomoParameter;
 import com.example.iCommerce.dto.request.CreateMomoRequest;
 import com.example.iCommerce.dto.request.MoMoMethodRequest;
 import com.example.iCommerce.dto.response.CreateMomoResponse;
+import com.example.iCommerce.entity.Notify;
 import com.example.iCommerce.entity.Order;
 import com.example.iCommerce.entity.OrderStatus;
+import com.example.iCommerce.entity.User;
+import com.example.iCommerce.enums.NotifyType;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
+import com.example.iCommerce.repository.NotifyRepository;
 import com.example.iCommerce.repository.OrderRepository;
 import com.example.iCommerce.repository.OrderStatusRepository;
+import com.example.iCommerce.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
@@ -53,6 +59,9 @@ public class MomoService {
 
     private final MomoApi momoApi;
     private final OrderStatusRepository orderStatusRepository;
+    SimpMessagingTemplate messagingTemplate;
+    NotifyRepository notifyRepository;
+    UserRepository userRepository;
 
 
     public String ipnHandler(Map<String,String> request){
@@ -70,6 +79,26 @@ public class MomoService {
                     .update_day(LocalDateTime.now())
                     .build();
             orderStatusRepository.save(orderStatus);
+
+            // 🔹 6️⃣ Gửi thông báo cho admin
+            User admin = userRepository.findByEmail("admin@gmail.com").orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+            );
+
+
+            Notify notify = Notify.builder()
+                    .title("Đã thanh toán")
+                    .type(NotifyType.ORDER.name())
+                    .type_id(order.getId())
+                    .message("Khách hàng " + order.getUser().getFull_name() + " vừa thanh toán đơn #" + order.getId())
+                    .create_day(LocalDateTime.now())
+                    .user(admin)
+                    .build();
+
+            notifyRepository.save(notify);
+
+            messagingTemplate.convertAndSend("/topic/admin", com.example.iCommerce.enums.OrderStatus.PAID.name());
+
             return "Giao dịch thành công.";
 
         }else {

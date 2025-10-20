@@ -4,12 +4,10 @@ package com.example.iCommerce.service;
 import com.example.iCommerce.dto.request.OrderNowRequest;
 import com.example.iCommerce.dto.request.OrderRequest;
 import com.example.iCommerce.dto.response.OrderResponse;
-import com.example.iCommerce.entity.Cart;
-import com.example.iCommerce.entity.Order;
-import com.example.iCommerce.entity.User;
-import com.example.iCommerce.entity.Voucher;
+import com.example.iCommerce.entity.*;
 import com.example.iCommerce.enums.ActionOrder;
 import com.example.iCommerce.enums.CartStatus;
+import com.example.iCommerce.enums.NotifyType;
 import com.example.iCommerce.enums.OrderStatus;
 import com.example.iCommerce.exception.AppException;
 import com.example.iCommerce.exception.ErrorCode;
@@ -23,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,6 +47,8 @@ public class OrderService {
     OrderStatusRepository orderStatusRepository;
     GiftRepository giftRepository;
     VoucherRepository voucherRepository;
+    SimpMessagingTemplate messagingTemplate;
+    NotifyRepository notifyRepository;
 
 
 
@@ -128,6 +129,29 @@ public class OrderService {
                 .build();
         orderStatusRepository.save(orderStatus);
 
+
+
+
+        // 🔹 6️⃣ Gửi thông báo cho admin
+        User admin = userRepository.findByEmail("admin@gmail.com").orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+        );
+
+
+        Notify notify = Notify.builder()
+                .title("Đơn hàng mới")
+                .type(NotifyType.ORDER.name())
+                .type_id(order.getId())
+                .message("Khách hàng " + user.getFull_name() + " vừa đặt đơn #" + order.getId())
+                .create_day(LocalDateTime.now())
+                .user(admin)
+                .build();
+
+        notifyRepository.save(notify);
+
+        messagingTemplate.convertAndSend("/topic/admin", "NEW_ORDER");
+
+
         return order.getId();
 
     }
@@ -174,6 +198,26 @@ public class OrderService {
                 .order(order)
                 .build();
         orderStatusRepository.save(orderStatus);
+
+        // 🔹 6️⃣ Gửi thông báo cho admin
+        User admin = userRepository.findByEmail("admin@gmail.com").orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+        );
+
+
+        Notify notify = Notify.builder()
+                .title("Đơn hàng mới")
+                .type(NotifyType.ORDER.name())
+                .type_id(order.getId())
+                .message("Khách hàng " + user.getFull_name() + " vừa đặt đơn #" + order.getId())
+                .create_day(LocalDateTime.now())
+                .user(admin)
+                .build();
+
+        notifyRepository.save(notify);
+
+        messagingTemplate.convertAndSend("/topic/admin", "NEW_ORDER");
+
 
 
         return order.getId();

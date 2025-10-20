@@ -22,12 +22,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 import java.util.List;
 
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    // Danh sách API cho phép POST mà không cần auth
     private final String[] POST_PUBLIC = {
             "/user", "/auth/login", "/auth/introspect", "/auth/logout",
             "/auth/refresh", "/product/search", "/product/filter",
@@ -37,27 +37,24 @@ public class SecurityConfig {
             "/auth/reset-password"
     };
 
-    // Danh sách API cho phép GET mà không cần auth
     private final String[] GET_PUBLIC = {
             "/product", "/product/{id}", "/product/item", "/images/{imageName}",
             "/product-variant/price-range", "/category", "/brand", "/poster",
             "/product-variant/{id}", "/rating/{id}", "/rating/{id}/ratings",
-            "/api/momo/ipn-handler", "/gift/{id}/product-variant"
+            "/api/momo/ipn-handler", "/gift/{id}/product-variant",
+            "/ws/**" // Thêm /ws/**
     };
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
 
-    // Mã hóa mật khẩu
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
 
-    // Cấu hình Security Filter Chain
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-
         httpSecurity
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, POST_PUBLIC).permitAll()
@@ -77,7 +74,6 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-    // Chuyển đổi JWT -> GrantedAuthorities
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -88,7 +84,6 @@ public class SecurityConfig {
         return converter;
     }
 
-    // Cho phép CORS cho cả localhost và domain Vercel
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -108,7 +103,6 @@ public class SecurityConfig {
         return source;
     }
 
-    // Đảm bảo Spring MVC cũng bật CORS
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
