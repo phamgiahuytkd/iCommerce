@@ -17,6 +17,8 @@ import java.util.List;
 public interface AttributeMapper {
     // Entity → Response
     // map AttributeValue → AttributeValueResponse
+    @Mapping(source = "name", target = "attribute_id")
+    @Mapping(source = "id", target = "id")
     AttributeValueResponse toAttributeValueResponse(AttributeValue value);
 
     // map list

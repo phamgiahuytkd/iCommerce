@@ -24,6 +24,7 @@ public class AttributeMapperImpl implements AttributeMapper {
 
         AttributeValueResponse.AttributeValueResponseBuilder attributeValueResponse = AttributeValueResponse.builder();
 
+        attributeValueResponse.attribute_id( value.getName() );
         attributeValueResponse.id( value.getId() );
 
         return attributeValueResponse.build();
