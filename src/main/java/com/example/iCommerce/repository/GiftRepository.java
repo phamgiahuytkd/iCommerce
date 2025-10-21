@@ -103,7 +103,6 @@ public interface GiftRepository extends JpaRepository<Gift, String> {
     LEFT JOIN attribute_value av ON va.attribute_value_id = av.id
     LEFT JOIN attribute a ON a.id = av.attribute_id
     WHERE pg.gift_id = :giftID
-      AND g.start_day <= CURRENT_TIMESTAMP
       AND g.end_day >= CURRENT_TIMESTAMP
       AND g.stock > 0
     GROUP BY g.id, gpv.id, gp.name, gpv.image, g.stock, g.start_day, g.end_day
@@ -132,8 +131,7 @@ public interface GiftRepository extends JpaRepository<Gift, String> {
     LEFT JOIN variant_attribute va ON va.product_variant_id = pv.id
     LEFT JOIN attribute_value av ON va.attribute_value_id = av.id
     LEFT JOIN attribute a ON a.id = av.attribute_id
-    WHERE g.start_day <= CURRENT_TIMESTAMP
-      AND g.end_day >= CURRENT_TIMESTAMP
+    WHERE g.end_day >= CURRENT_TIMESTAMP
       AND g.stock > 0
     GROUP BY g.id, pv.id, p.name, pv.image, g.stock, g.start_day, g.end_day
 """, nativeQuery = true)

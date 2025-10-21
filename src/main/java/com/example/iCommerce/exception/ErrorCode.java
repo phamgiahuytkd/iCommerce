@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatusCode;
 @Getter
 public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "UNCATEGORIZED EXCEPTION", HttpStatus.INTERNAL_SERVER_ERROR),
+    IS_BLOCK(9998, "Tài khoản của bạn đã bị khoá vì vi phạm một số nguyên tắc của chúng tôi!", HttpStatus.INTERNAL_SERVER_ERROR),
     KEY_INVALID(1000, "INVALID KEY MESSAGE", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1001, "Tài khoản không tồn tại", HttpStatus.NOT_FOUND),
     EMAIL_EXISTED(1002, "Email đã tồn tại", HttpStatus.BAD_REQUEST),

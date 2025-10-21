@@ -95,6 +95,15 @@ public class UserController {
 
     }
 
+    @PutMapping("/{id}/unblock")
+    ApiResponse<String> unblockUser(@PathVariable("id") String id){
+        userService.unblockUser(id);
+        return ApiResponse.<String>builder()
+                .result("Đã mở khóa tài khoản.")
+                .build();
+
+    }
+
 
     ///////Customer//////
     @GetMapping("/{userID}/overview")

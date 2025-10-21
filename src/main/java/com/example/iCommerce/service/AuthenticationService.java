@@ -129,6 +129,11 @@ public class AuthenticationService {
 
 
     private String generateToken(User user){
+
+        if(user.getStop_day()!=null){
+            throw new AppException(ErrorCode.IS_BLOCK);
+        }
+
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getId())

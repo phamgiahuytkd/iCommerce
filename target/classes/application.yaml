@@ -39,7 +39,7 @@ spring:
 
   mail:
     host: smtp.gmail.com
-    port: 465
+    port: 587
     username: pghuy2101320@student.ctuet.edu.vn
     password: ${MAIL_PASSWORD}
     properties:

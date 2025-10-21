@@ -187,6 +187,16 @@ public class UserService {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
+    public void unblockUser(String id){
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+        );
+        user.setStop_day(null);
+        userRepository.save(user);
+    }
+
+
 
     @PreAuthorize("hasRole('ADMIN')")
     public UserOverviewResponse getUserOverview(String id) {
