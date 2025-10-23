@@ -215,7 +215,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
     HAVING MAX(CASE WHEN d.end_day > NOW() AND d.start_day <= NOW() THEN d.percent END) IS NOT NULL
     ORDER BY 
         stop ASC,
-        MAX(pv.create_day) DESC
+        percent DESC
 """, nativeQuery = true)
     List<Object[]> findProductsDiscount();
 
@@ -286,7 +286,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
 
     ORDER BY 
         stop ASC,
-        MAX(pv.create_day) DESC
+        percent DESC
     """, nativeQuery = true)
     List<Object[]> findTop10ProductDiscount();
 
