@@ -207,12 +207,12 @@ public class UserService {
         Object[] data = userOverview.get(0);
 
         return UserOverviewResponse.builder()
-                .total_accumulated_money(((Number) data[0]).longValue())
-                .total_orders(((Number) data[1]).longValue())
-                .processing_orders(((Number) data[2]).longValue())
-                .success_orders(((Number) data[3]).longValue())
-                .failed_orders(((Number) data[4]).longValue())
-                .fraud_orders(((Number) data[5]).longValue())
+                .total_accumulated_money(((Number) data[1]).longValue())
+                .total_orders(((Number) data[0]).longValue())
+                .processing_orders(((Number) data[5]).longValue())
+                .success_orders(((Number) data[2]).longValue())
+                .failed_orders(((Number) data[3]).longValue())
+                .fraud_orders(((Number) data[4]).longValue())
                 .build();
     }
 
