@@ -68,7 +68,11 @@ public class FraudService {
 
         // ✅ Gán lại vào response (để frontend hiển thị)
         response.setProbability(finalScore);
-
+        if (finalScore>0.5){
+            response.setPrediction(1);
+        }else {
+            response.setPrediction(0);
+        }
         return response;
     }
 }
