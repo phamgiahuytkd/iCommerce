@@ -254,7 +254,10 @@ public class UserService {
         }
 
         for (Order order : overdueOrders) {
-            User user = order.getUser();
+            User user = userRepository.findById(order.getUser().getId()).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED)
+            );
+
 
             // 🔍 Kiểm tra xem đã có trạng thái PENALTY chưa
             boolean alreadyPenalized = order.getOrderStatuses().stream()
@@ -267,7 +270,10 @@ public class UserService {
             // ⚠ Giảm uy tín người dùng
             int newReputation = Math.max(user.getReputation() - 30, 0);
             user.setReputation(newReputation);
-            userRepository.save(user);
+            if(newReputation <= 30){
+                user.setStop_day(LocalDateTime.now());
+            }
+            userRepository.saveAndFlush(user);
 
             // 🧾 Tạo thêm trạng thái PENALTY
             com.example.iCommerce.entity.OrderStatus penaltyStatus = new com.example.iCommerce.entity.OrderStatus();

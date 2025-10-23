@@ -58,40 +58,53 @@ public interface UserRepository extends JpaRepository<User, String> {
 
 
     /// Customer ///
+    /// Customer Overview ///
     @Query(value = """
-        WITH status_flags AS (
-            SELECT
-                o.id AS order_id,
-                o.amount,
-                MAX(CASE WHEN os.status = 'PROCESSING' THEN 1 ELSE 0 END) AS has_processing,
-                MAX(CASE WHEN os.status = 'DELIVERED' THEN 1 ELSE 0 END) AS has_delivered,
-                MAX(CASE WHEN os.status = 'PAID' THEN 1 ELSE 0 END) AS has_paid,
-                MAX(CASE WHEN os.status = 'CANCELED' THEN 1 ELSE 0 END) AS has_canceled,
-                MAX(CASE WHEN os.status = 'REFUSED' THEN 1 ELSE 0 END) AS has_refused,
-                MIN(CASE WHEN os.status = 'DELIVERED' THEN os.update_day END) AS delivered_day,
-                MIN(CASE WHEN os.status = 'PAID' THEN os.update_day END) AS paid_day
-            FROM orders o
-            JOIN order_status os ON o.id = os.order_id
-            WHERE o.user_id = :userId
-            GROUP BY o.id, o.amount
-        )
+    WITH status_flags AS (
         SELECT
-            COALESCE(SUM(CASE WHEN has_delivered = 1 AND has_paid = 1 THEN amount ELSE 0 END), 0),
-            COALESCE(COUNT(*), 0),
-            COALESCE(SUM(CASE WHEN has_processing = 1 AND has_delivered = 0 AND has_paid = 0 
-                                   AND has_canceled = 0 AND has_refused = 0
-                              THEN 1 ELSE 0 END), 0),
-            COALESCE(SUM(CASE WHEN has_delivered = 1 AND has_paid = 1 THEN 1 ELSE 0 END), 0),
-            COALESCE(SUM(CASE WHEN has_canceled = 1 OR has_refused = 1 THEN 1 ELSE 0 END), 0),
-            COALESCE(SUM(CASE 
-                            WHEN has_delivered = 1 AND (
-                                    paid_day IS NULL 
-                                    OR paid_day > DATE_ADD(delivered_day, INTERVAL 1 DAY)
-                                )
-                            THEN 1 ELSE 0 END), 0)
-        FROM status_flags
-        """, nativeQuery = true)
+            o.id AS order_id,
+            o.amount,
+            MAX(CASE WHEN os.status = 'PAID' THEN 1 ELSE 0 END)       AS has_paid,
+            MAX(CASE WHEN os.status = 'DELIVERED' THEN 1 ELSE 0 END)  AS has_delivered,
+            MAX(CASE WHEN os.status = 'CANCELED' THEN 1 ELSE 0 END)   AS has_canceled,
+            MAX(CASE WHEN os.status = 'REFUSED' THEN 1 ELSE 0 END)    AS has_refused,
+            MAX(CASE WHEN os.status = 'PENALTY' THEN 1 ELSE 0 END)    AS has_penalty
+        FROM orders o
+        JOIN order_status os ON o.id = os.order_id
+        WHERE o.user_id = :userId
+        GROUP BY o.id, o.amount
+    )
+    SELECT
+        COALESCE(COUNT(*), 0) AS total_orders,
+        COALESCE(SUM(CASE 
+            WHEN has_penalty = 0 
+                 AND has_canceled = 0 
+                 AND has_refused = 0 
+                 AND has_paid = 1 
+                 AND has_delivered = 1 
+            THEN amount ELSE 0 END), 0) AS total_paid_amount,
+        COALESCE(SUM(CASE 
+            WHEN has_penalty = 0 
+                 AND has_canceled = 0 
+                 AND has_refused = 0 
+                 AND has_paid = 1 
+                 AND has_delivered = 1 
+            THEN 1 ELSE 0 END), 0) AS successful_orders,
+        COALESCE(SUM(CASE 
+            WHEN has_penalty = 0 
+                 AND (has_canceled = 1 OR has_refused = 1) 
+            THEN 1 ELSE 0 END), 0) AS failed_orders,
+        COALESCE(SUM(CASE 
+            WHEN has_penalty = 1 THEN 1 ELSE 0 END), 0) AS fraud_orders,
+        COALESCE(SUM(CASE
+            WHEN has_penalty = 0
+                 AND (has_canceled = 0 AND has_refused = 0)
+                 AND NOT(has_paid = 1 AND has_delivered = 1)
+            THEN 1 ELSE 0 END), 0) AS processing_orders
+    FROM status_flags
+    """, nativeQuery = true)
     List<Object[]> getUserOverview(@Param("userId") String userId);
+
 
     @Query(value = """
         WITH ranked_status AS (
