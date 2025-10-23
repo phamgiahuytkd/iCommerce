@@ -61,10 +61,10 @@ public class FraudService {
         // ⚙️ Quy đổi fraudScore (0–1) sang phần trăm (0–100)
         assert response != null;
         double fraudScorePercent = response.getProbability();
-        double reputation = user.getReputation();
+        double reputation = 100-user.getReputation();
 
         // ✅ Tính điểm tổng hợp: 70% fraud score + 30% reputation
-        double finalScore = fraudScorePercent * 0.7 + reputation * 0.003 ;
+        double finalScore = (fraudScorePercent * 0.7) + reputation * 0.003 ;
 
         // ✅ Gán lại vào response (để frontend hiển thị)
         response.setProbability(finalScore);
