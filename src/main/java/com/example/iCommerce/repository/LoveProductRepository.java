@@ -61,7 +61,11 @@ public interface LoveProductRepository extends JpaRepository<LoveProduct, LovePr
         bg.start_day AS gift_start_day,
         bg.end_day AS gift_end_day,
         AVG(r.star) AS star,
-        bg.gift_id
+        bg.gift_id,
+        CASE
+            WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                ELSE TRUE
+        END AS stop
     FROM love_product lp
     JOIN product p ON p.id = lp.product_id
     LEFT JOIN brand b ON p.brand_id = b.id
@@ -79,7 +83,9 @@ public interface LoveProductRepository extends JpaRepository<LoveProduct, LovePr
         bg.gift_name, bg.gift_image, bg.gift_stock,
         bg.start_day, bg.end_day, bg.gift_id
 
-    ORDER BY lp.create_day DESC
+    ORDER BY 
+        stop ASC,
+        MAX(pv.create_day) DESC
 """, nativeQuery = true)
     List<Object[]> findLovedProductsByUserId(@Param("userId") String userId);
 
