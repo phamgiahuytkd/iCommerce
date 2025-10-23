@@ -33,5 +33,6 @@ public class ProductResponse {
     String description;
     String instruction;
     String ingredient;
+    Boolean stop;
 
 }

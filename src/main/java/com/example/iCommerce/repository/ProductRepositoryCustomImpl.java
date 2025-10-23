@@ -53,7 +53,11 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
             MAX(CASE WHEN d.end_day > NOW() AND d.start_day <= NOW() THEN d.percent END) AS percent,
             bg.gift_name, bg.gift_image, bg.gift_stock,
             bg.start_day AS gift_start_day, bg.end_day AS gift_end_day,
-            ROUND(AVG(r.star), 1) AS star, bg.gift_id
+            ROUND(AVG(r.star), 1) AS star, bg.gift_id,
+            CASE
+                WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                    ELSE TRUE
+            END AS stop
         FROM product p
         LEFT JOIN brand b ON p.brand_id = b.id
         LEFT JOIN category c ON p.category_id = c.id
@@ -92,7 +96,7 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
             queryBuilder.append(" HAVING ").append(String.join(" AND ", havingConditions));
         }
 
-        queryBuilder.append(" ORDER BY MAX(pv.create_day) DESC");
+        queryBuilder.append(" ORDER BY stop ASC, MAX(pv.create_day) DESC");
 
         Query query = entityManager.createNativeQuery(queryBuilder.toString());
         if (name != null) query.setParameter("name", name);
@@ -143,7 +147,11 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
             MAX(CASE WHEN d.end_day > NOW() AND d.start_day <= NOW() THEN d.percent END) AS percent,
             bg.gift_name, bg.gift_image, bg.gift_stock,
             bg.start_day AS gift_start_day, bg.end_day AS gift_end_day,
-            ROUND(AVG(r.star), 1) AS star, bg.gift_id
+            ROUND(AVG(r.star), 1) AS star, bg.gift_id,
+            CASE
+                WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                    ELSE TRUE
+            END AS stop
         FROM product p
         LEFT JOIN brand b ON p.brand_id = b.id
         LEFT JOIN category c ON p.category_id = c.id
@@ -165,7 +173,9 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
         GROUP BY p.id, p.name, b.name, c.name, p.image, p.view,
                  p.description, p.instruction, p.ingredient,
                  bg.gift_name, bg.gift_image, bg.gift_stock, bg.start_day, bg.end_day, bg.gift_id
-        ORDER BY MAX(pv.create_day) DESC
+        ORDER BY
+            stop ASC,
+            MAX(pv.create_day) DESC
         """);
 
         Query query = entityManager.createNativeQuery(queryBuilder.toString());

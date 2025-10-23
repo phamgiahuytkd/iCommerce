@@ -57,6 +57,7 @@ public interface ProductMapper {
                 .gift_end_day((row[17] instanceof Timestamp) ? ((Timestamp) row[17]).toLocalDateTime() : null)
                 .star(row[18] != null ? ((Number) row[18]).doubleValue() : null)
                 .gift_id((String) row[19])
+                .stop(row[20] != null ? (((Number) row[20]).intValue() != 0) : null)
                 .build();
     }
 

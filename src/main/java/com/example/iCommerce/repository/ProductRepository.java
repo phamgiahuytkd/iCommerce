@@ -62,7 +62,12 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.start_day AS gift_start_day,
         bg.end_day AS gift_end_day,
         AVG(r.star) AS star,
-        bg.gift_id
+        bg.gift_id,
+        CASE
+            WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                ELSE TRUE
+        END AS stop
+        
     FROM product p
     LEFT JOIN brand b ON p.brand_id = b.id
     LEFT JOIN category c ON p.category_id = c.id
@@ -123,7 +128,11 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.start_day AS gift_start_day,
         bg.end_day AS gift_end_day,
         AVG(r.star) AS star,
-        bg.gift_id
+        bg.gift_id,
+        CASE
+            WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                ELSE TRUE
+        END AS stop
     FROM product p
     LEFT JOIN brand b ON p.brand_id = b.id
     LEFT JOIN category c ON p.category_id = c.id
@@ -136,7 +145,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         p.description, p.instruction, p.ingredient,
         bg.gift_name, bg.gift_image, bg.gift_stock,
         bg.start_day, bg.end_day, bg.gift_id
-    ORDER BY MAX(pv.create_day) DESC
+    ORDER BY 
+        stop ASC,
+        MAX(pv.create_day) DESC
     """, nativeQuery = true)
     List<Object[]> findProducts();
 
@@ -184,7 +195,11 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.start_day AS gift_start_day,
         bg.end_day AS gift_end_day,
         AVG(r.star) AS star,
-        bg.gift_id
+        bg.gift_id,
+        CASE
+            WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                ELSE TRUE
+        END AS stop
     FROM product p
     LEFT JOIN brand b ON p.brand_id = b.id
     LEFT JOIN category c ON p.category_id = c.id
@@ -198,7 +213,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.gift_name, bg.gift_image, bg.gift_stock, bg.start_day, bg.end_day, bg.gift_id
 
     HAVING MAX(CASE WHEN d.end_day > NOW() AND d.start_day <= NOW() THEN d.percent END) IS NOT NULL
-    ORDER BY percent DESC
+    ORDER BY 
+        stop ASC,
+        MAX(pv.create_day) DESC
 """, nativeQuery = true)
     List<Object[]> findProductsDiscount();
 
@@ -248,7 +265,11 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.start_day AS gift_start_day,
         bg.end_day AS gift_end_day,
         AVG(r.star) AS star,
-        bg.gift_id
+        bg.gift_id,
+        CASE
+            WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                ELSE TRUE
+        END AS stop
     FROM product p
     LEFT JOIN brand b ON p.brand_id = b.id
     LEFT JOIN category c ON p.category_id = c.id
@@ -263,7 +284,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
 
     HAVING MAX(CASE WHEN d.end_day > NOW() AND d.start_day <= NOW() THEN d.percent END) IS NOT NULL
 
-    ORDER BY percent DESC
+    ORDER BY 
+        stop ASC,
+        MAX(pv.create_day) DESC
     """, nativeQuery = true)
     List<Object[]> findTop10ProductDiscount();
 
@@ -310,7 +333,11 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.start_day AS gift_start_day,
         bg.end_day AS gift_end_day,
         AVG(r.star) AS star,
-        bg.gift_id
+        bg.gift_id,
+        CASE
+            WHEN COUNT(CASE WHEN pv.stop_day IS NULL THEN 1 END) > 0 THEN FALSE
+                ELSE TRUE
+        END AS stop
     FROM product p
     LEFT JOIN brand b ON p.brand_id = b.id
     LEFT JOIN category c ON p.category_id = c.id
@@ -325,7 +352,9 @@ public interface ProductRepository extends JpaRepository<Product, String>, Produ
         bg.gift_name, bg.gift_image, bg.gift_stock,
         bg.start_day, bg.end_day, bg.gift_id
 
-    ORDER BY MAX(pv.create_day) DESC
+    ORDER BY 
+        stop ASC,
+        MAX(pv.create_day) DESC
 """, countQuery = "SELECT COUNT(*) FROM product p", nativeQuery = true)
     List<Object[]> findLatestProducts();
 

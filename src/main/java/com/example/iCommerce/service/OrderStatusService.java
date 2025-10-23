@@ -81,14 +81,17 @@ public class OrderStatusService {
 
         // 🔹 6️⃣ Gửi thông báo cho admin
         User user;
+        String type;
         String title;
         String message;
         if(request.getStatus().equals(OrderStatus.REFUSED.name()) || request.getStatus().equals(OrderStatus.APPROVED.name())){
             user = order.getUser();
             if(request.getStatus().equals(OrderStatus.REFUSED.name())){
+                type = NotifyType.UNCOMPLETED.name();
                 title = "Đơn hàng bị từ chối";
                 message = "Đơn hàng #" + order.getId() + " của bạn đã bị từ chối!";
             }else{
+                type = NotifyType.PROCESSING.name();
                 title = "Đơn hàng đã được duyệt";
                 message = "Đơn hàng #" + order.getId() + " của bạn đã được duyệt!";
             }
@@ -97,6 +100,7 @@ public class OrderStatusService {
             user = userRepository.findByEmail("admin@gmail.com").orElseThrow(
                     () -> new AppException(ErrorCode.USER_NOT_EXISTED)
             );
+            type = NotifyType.ORDER.name();
             title = "Đơn hàng đã bị hủy";
             message = "Khách hàng " + order.getUser().getFull_name() + " vừa hủy đơn #" + order.getId();
             messagingTemplate.convertAndSend("/topic/admin", request.getStatus());
@@ -108,7 +112,7 @@ public class OrderStatusService {
 
         Notify notify = Notify.builder()
                 .title(title)
-                .type(NotifyType.ORDER.name())
+                .type(type)
                 .type_id(order.getId())
                 .message(message)
                 .create_day(LocalDateTime.now())
@@ -188,6 +192,7 @@ public class OrderStatusService {
 
 
         // 🔹 6️⃣ Gửi thông báo cho admin
+        String type;
         String title;
         String message;
         User user;
@@ -196,15 +201,24 @@ public class OrderStatusService {
             user = userRepository.findByEmail("admin@gmail.com").orElseThrow(
                     () -> new AppException(ErrorCode.USER_NOT_EXISTED)
             );
-
+            type = NotifyType.ORDER.name();
             title = "Đã thanh toán";
             message ="Khách hàng " + order.getUser().getFull_name() + " đã thanh toán đơn hàng #" + order.getId();
             messagingTemplate.convertAndSend("/topic/admin", request.getStatus());
         }else {
             if(request.getStatus().equals(OrderStatus.DELIVERING.name())){
+                type = NotifyType.DELIVERING.name();
                 title = "Đang vận chuyển";
                 message ="Đơn hàng #" + order.getId() + " vừa được cập nhật quá trình vận chuyển!";
             }else {
+                boolean hasPaid = order.getOrderStatuses() != null &&
+                        order.getOrderStatuses().stream()
+                                .anyMatch(os -> OrderStatus.PAID.name().equals(os.getStatus()));
+                if(hasPaid){
+                    type = NotifyType.COMPLETED.name();
+                }else {
+                    type = NotifyType.PENDING.name();
+                }
                 title = "Đã đến";
                 message ="Đơn hàng #" + order.getId() + " vừa được giao đến!";
             }
@@ -220,7 +234,7 @@ public class OrderStatusService {
 
         Notify notify = Notify.builder()
                 .title(title)
-                .type(NotifyType.ORDER.name())
+                .type(type)
                 .type_id(order.getId())
                 .message(message)
                 .create_day(LocalDateTime.now())
